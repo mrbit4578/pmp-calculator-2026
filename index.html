@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMP Formula Calculator</title>
+<title>PMP Formula Calculator & AI Advisor</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0d1117;color:#c9d1d9;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Courier New',Courier,monospace;padding:20px;font-size:13px;line-height:1.5}
@@ -16,6 +16,10 @@ h1{color:#58a6ff;font-size:20px;letter-spacing:0.5px;display:flex;align-items:ce
 .lang-btn.active{background:#238636;color:#ffffff;font-weight:bold}
 .nav-action-btn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:6px;transition:all .15s}
 .nav-action-btn:hover{background:#30363d;color:#58a6ff;border-color:#58a6ff}
+.nav-action-btn.btn-ai-nav{border-color:#238636;color:#7ee787}
+.nav-action-btn.btn-ai-nav:hover{background:#238636;color:#ffffff}
+.ai-status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d29922;margin-left:4px;transition:background .2s}
+.ai-status-dot.active{background:#3fb950;box-shadow:0 0 6px #3fb950}
 
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
 .tab-btn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:7px 12px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:6px;transition:all .15s}
@@ -29,14 +33,16 @@ h2{color:#58a6ff;font-size:16px}
 
 .input-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
 label{display:inline-flex;align-items:center;gap:6px;color:#c9d1d9;font-size:12px}
-input[type=number],input[type=text]{background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:12px;width:125px}
+input[type=number],input[type=text],select{background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:12px;width:125px}
 input[type=text].wide{width:360px}
-input:focus{outline:none;border-color:#58a6ff}
-.btn-row{margin:14px 0 10px;display:flex;gap:8px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#58a6ff}
+.btn-row{margin:14px 0 10px;display:flex;flex-wrap:wrap;gap:8px}
 .btn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:6px;transition:all .15s}
 .btn:hover{background:#30363d}
 .btn-primary{background:#238636;border-color:#2ea043;color:#ffffff;font-weight:bold}
 .btn-primary:hover{background:#2ea043}
+.btn-ai{background:#21262d;color:#7ee787;border:1px solid #238636;font-weight:bold}
+.btn-ai:hover{background:#238636;color:#ffffff}
 
 .output{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin-top:12px;min-height:50px;white-space:pre-wrap;line-height:1.8;font-size:12px}
 .output div{padding:2px 0}
@@ -74,6 +80,27 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 .modal-close:hover{color:#f85149;background:#21262d}
 .modal-body{padding:18px;overflow-y:auto;flex:1}
 
+/* AI Chat Box */
+.ai-chat-box{max-width:880px;height:84vh;display:flex;flex-direction:column}
+.ai-quick-prompts{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;background:#0d1117;border-bottom:1px solid #21262d}
+.quick-chip{background:#161b22;border:1px solid #30363d;color:#c9d1d9;padding:4px 10px;border-radius:14px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .15s}
+.quick-chip:hover{background:#21262d;color:#58a6ff;border-color:#58a6ff}
+.ai-chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:#0d1117}
+.ai-msg{display:flex;gap:10px;max-width:90%}
+.ai-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.ai-msg.assistant{align-self:flex-start}
+.ai-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-msg.user .ai-avatar{background:#1f6feb;color:#ffffff}
+.ai-msg.assistant .ai-avatar{background:#238636;color:#ffffff}
+.ai-bubble{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.6;color:#c9d1d9;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user .ai-bubble{background:#1f6feb;color:#ffffff;border-color:#388bfd}
+.ai-bubble strong{color:#58a6ff}
+.ai-msg.user .ai-bubble strong{color:#ffffff}
+.ai-bubble code{background:rgba(110,118,129,0.25);padding:2px 5px;border-radius:3px;font-family:inherit}
+.ai-chat-input-bar{display:flex;gap:8px;padding:12px 16px;background:#161b22;border-top:1px solid #30363d;align-items:flex-end}
+.ai-chat-input-bar textarea{flex:1;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:12px;resize:none;min-height:42px;max-height:120px}
+.ai-chat-input-bar textarea:focus{outline:none;border-color:#58a6ff}
+
 /* Mindmap Grid & Branches */
 .mindmap-root{text-align:center;background:#0d1117;border:1px solid #58a6ff;color:#58a6ff;padding:12px;border-radius:8px;font-weight:bold;margin-bottom:20px;font-size:14px;box-shadow:0 0 12px rgba(88,166,255,0.15)}
 .mindmap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
@@ -100,13 +127,20 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 <body>
 
 <div class="header">
-  <h1><span>📊</span> <span id="app-title">PMP Formula Calculator</span></h1>
+  <h1><span>📊</span> <span id="app-title">PMP Formula Calculator & AI Advisor</span></h1>
   <div class="header-actions">
     <div class="lang-group">
       <button class="lang-btn active" id="btn-lang-en" onclick="setLanguage('en')">EN</button>
       <button class="lang-btn" id="btn-lang-vi" onclick="setLanguage('vi')">Tiếng Việt</button>
       <button class="lang-btn" id="btn-lang-zh" onclick="setLanguage('zh')">中文</button>
     </div>
+    <button class="nav-action-btn btn-ai-nav" onclick="openModal('modal-ai-chat')" title="Mở Trợ lý AI Kimi-K3">
+      <span>🤖</span> <span id="btn-ai-label">AI Advisor</span>
+      <span class="ai-status-dot" id="ai-status-dot" title="Trạng thái API Key"></span>
+    </button>
+    <button class="nav-action-btn" onclick="openModal('modal-ai-settings')" title="Cấu hình River.ai API Key">
+      <span>⚙️</span> <span id="btn-api-label">River.ai</span>
+    </button>
     <button class="nav-action-btn" onclick="openModal('modal-mindmap')">
       <span>🗺️</span> <span id="btn-mindmap-label">Mindmap</span>
     </button>
@@ -147,6 +181,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-1" onclick="computeEVM()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-1" onclick="copyOutput(1)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-1" onclick="resetTab(1)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-1" onclick="askAiAboutTab(1)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-1-output"></div>
 </div>
@@ -169,6 +204,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-2" onclick="computeCPM()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-2" onclick="copyOutput(2)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-2" onclick="resetTab(2)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-2" onclick="askAiAboutTab(2)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-2-output"></div>
 </div>
@@ -191,6 +227,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-3" onclick="computeCost()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-3" onclick="copyOutput(3)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-3" onclick="resetTab(3)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-3" onclick="askAiAboutTab(3)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-3-output"></div>
 </div>
@@ -218,6 +255,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-4" onclick="computeQuality()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-4" onclick="copyOutput(4)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-4" onclick="resetTab(4)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-4" onclick="askAiAboutTab(4)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-4-output"></div>
 </div>
@@ -243,6 +281,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-5" onclick="computeRisk()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-5" onclick="copyOutput(5)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-5" onclick="resetTab(5)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-5" onclick="askAiAboutTab(5)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-5-output"></div>
 </div>
@@ -270,6 +309,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-6" onclick="computeProcurement()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-6" onclick="copyOutput(6)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-6" onclick="resetTab(6)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-6" onclick="askAiAboutTab(6)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-6-output"></div>
 </div>
@@ -290,6 +330,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-7" onclick="computeStakeholder()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-7" onclick="copyOutput(7)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-7" onclick="resetTab(7)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-7" onclick="askAiAboutTab(7)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-7-output"></div>
 </div>
@@ -311,6 +352,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-8" onclick="computeComm()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-8" onclick="copyOutput(8)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-8" onclick="resetTab(8)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-8" onclick="askAiAboutTab(8)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-8-output"></div>
 </div>
@@ -330,6 +372,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-9" onclick="computeBenefit()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-9" onclick="copyOutput(9)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-9" onclick="resetTab(9)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-9" onclick="askAiAboutTab(9)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-9-output"></div>
 </div>
@@ -349,6 +392,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-10" onclick="computePERT()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-10" onclick="copyOutput(10)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-10" onclick="resetTab(10)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-10" onclick="askAiAboutTab(10)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-10-output"></div>
 </div>
@@ -367,6 +411,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-primary btn-compute" id="btn-compute-11" onclick="computeFinance()">Compute</button>
     <button class="btn btn-copy" id="btn-copy-11" onclick="copyOutput(11)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-11" onclick="resetTab(11)">Reset</button>
+    <button class="btn btn-ai" id="btn-ai-audit-11" onclick="askAiAboutTab(11)">🤖 <span class="ai-btn-text">AI Audit</span></button>
   </div>
   <div class="output" id="tab-11-output"></div>
 </div>
@@ -411,6 +456,83 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <tr><td>PERT</td><td>Beta & Triangular Distribution</td><td>BetaMean = (O+4M+P)/6, TriMean = (O+M+P)/3</td></tr>
     <tr><td>Finance</td><td>NPV & IRR</td><td>NPV = sum(CF_t / (1+r)^t), IRR = Rate where NPV = 0</td></tr>
   </table>
+</div>
+
+<!-- MODAL: AI CHAT -->
+<div class="modal-overlay" id="modal-ai-chat">
+  <div class="modal-box ai-chat-box">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">🤖</span>
+        <div>
+          <h3 id="ai-modal-title" style="margin:0;font-size:15px">PMP AI Financial & Technical Advisor</h3>
+          <span style="font-size:11px;color:#8b949e">Powered by <strong style="color:#58a6ff" id="lbl-active-model">moonshotai/Kimi-K3</strong> via River.ai</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="openModal('modal-ai-settings')" title="Cài đặt API Key">⚙️ Settings</button>
+        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="clearAiChat()" title="Xóa lịch sử hội thoại">🗑️ Clear</button>
+        <button class="modal-close" onclick="closeModal('modal-ai-chat')">✕</button>
+      </div>
+    </div>
+    <div class="ai-quick-prompts">
+      <button class="quick-chip" onclick="quickAiPrompt('audit')">🔍 Đối chiếu số liệu Tab hiện tại</button>
+      <button class="quick-chip" onclick="quickAiPrompt('accounting')">📊 Phân tích kế toán tài chính & quản trị</button>
+      <button class="quick-chip" onclick="quickAiPrompt('optimize')">💡 Gợi ý giải pháp tối ưu hóa</button>
+      <button class="quick-chip" onclick="quickAiPrompt('exam')">🎓 Câu hỏi thi PMP tương tự</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
+      <!-- Chat bubbles -->
+    </div>
+    <div class="ai-chat-input-bar">
+      <textarea id="ai-user-input" placeholder="Hỏi đáp về công thức PMP, đối chiếu tính toán, kế toán tài chính..." rows="2" onkeydown="handleAiKeydown(event)"></textarea>
+      <button class="btn btn-primary" id="btn-send-ai" onclick="sendAiMessage()">Gửi ↵</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AI SETTINGS -->
+<div class="modal-overlay" id="modal-ai-settings">
+  <div class="modal-box" style="max-width:540px">
+    <div class="modal-header">
+      <h3 id="ai-settings-title"><span>⚙️</span> Cấu hình River.ai API (Kimi-K3)</h3>
+      <button class="modal-close" onclick="closeModal('modal-ai-settings')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="margin-bottom:14px">
+        <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">River.ai API Key:</label>
+        <div style="display:flex;gap:6px">
+          <input type="password" id="river-api-key" placeholder="sk-... hoặc key từ console.river.ai" style="flex:1;width:auto">
+          <button class="btn" onclick="toggleKeyVisibility()" title="Ẩn/Hiện key">👁️</button>
+        </div>
+        <p style="font-size:11px;color:#8b949e;margin-top:5px">Lấy key tại: <a href="https://console.river.ai/inference" target="_blank" style="color:#58a6ff">https://console.river.ai/inference</a>. Key được lưu an toàn cục bộ trong trình duyệt (localStorage), không đẩy lên GitHub.</p>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">Mô hình AI (Model):</label>
+        <select id="river-model-select" onchange="onModelSelectChange()" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:7px 10px;border-radius:4px;font-family:inherit;width:100%;font-size:12px">
+          <option value="moonshotai/Kimi-K3" selected>moonshotai/Kimi-K3 (Khuyến nghị - Logic & Toán học vượt trội)</option>
+          <option value="deepseek-ai/DeepSeek-V4.1-Flash">deepseek-ai/DeepSeek-V4.1-Flash (Tốc độ phản hồi cực nhanh)</option>
+          <option value="Qwen/Qwen3.8-27B-FP8">Qwen/Qwen3.8-27B-FP8</option>
+          <option value="GLM-5.3">GLM-5.3</option>
+          <option value="zai-org/GLM-5.3-Flash">zai-org/GLM-5.3-Flash</option>
+          <option value="custom">Tùy chỉnh model khác...</option>
+        </select>
+        <input type="text" id="river-model-custom" placeholder="Nhập định danh model..." style="display:none;width:100%;margin-top:6px">
+      </div>
+
+      <div style="margin-bottom:18px">
+        <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">Base URL:</label>
+        <input type="text" id="river-base-url" value="https://api.river.ai/v1" style="width:100%">
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #21262d;padding-top:14px">
+        <button class="btn" id="btn-test-conn" onclick="testRiverConnection()">🔌 Kiểm tra kết nối</button>
+        <button class="btn btn-primary" onclick="saveRiverSettings()">💾 Lưu cấu hình</button>
+      </div>
+      <div id="test-conn-result" style="margin-top:10px;font-size:12px"></div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: MINDMAP -->
@@ -638,12 +760,14 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 // --- I18N DICTIONARY ---
 const I18N = {
   en: {
-    appTitle: "PMP Formula Calculator",
+    appTitle: "PMP Formula Calculator & AI Advisor",
+    btnAiLabel: "AI Advisor",
     btnMindmap: "Mindmap",
     btnGuide: "Result Guide",
     btnCompute: "Compute",
     btnCopy: "Copy",
     btnReset: "Reset",
+    btnAiAudit: "AI Audit",
     btnAddRow: "+ Add Row",
     btnRemRow: "- Remove Row",
     mmModalTitle: "🗺️ PMP Knowledge Mindmap",
@@ -675,12 +799,14 @@ const I18N = {
     t12Desc: "Summary of core PMP formulas and mathematical relationships"
   },
   vi: {
-    appTitle: "Công cụ tính toán công thức PMP",
+    appTitle: "Công cụ tính toán công thức PMP & Trợ lý AI",
+    btnAiLabel: "Trợ lý AI",
     btnMindmap: "Sơ đồ Mindmap",
     btnGuide: "Hướng dẫn kết quả",
     btnCompute: "Tính toán",
     btnCopy: "Sao chép",
     btnReset: "Đặt lại",
+    btnAiAudit: "Tham vấn AI",
     btnAddRow: "+ Thêm dòng",
     btnRemRow: "- Xóa dòng",
     mmModalTitle: "🗺️ Sơ đồ tư duy PMP (PMP Knowledge Mindmap)",
@@ -712,12 +838,14 @@ const I18N = {
     t12Desc: "Tổng hợp toàn bộ các phương trình & ký hiệu công thức thi PMP"
   },
   zh: {
-    appTitle: "PMP 项目管理公式计算器",
+    appTitle: "PMP 项目管理公式计算器与 AI 顾问",
+    btnAiLabel: "AI 顾问",
     btnMindmap: "思维导图",
     btnGuide: "结果解读指南",
     btnCompute: "计算",
     btnCopy: "复制结果",
     btnReset: "重置",
+    btnAiAudit: "AI 智能核验",
     btnAddRow: "+ 添加行",
     btnRemRow: "- 删除行",
     mmModalTitle: "🗺️ PMP 知识领域思维导图 (Mindmap)",
@@ -763,6 +891,7 @@ function setLanguage(lang) {
 
   const dict = I18N[lang];
   document.getElementById('app-title').innerText = dict.appTitle;
+  document.getElementById('btn-ai-label').innerText = dict.btnAiLabel;
   document.getElementById('btn-mindmap-label').innerText = dict.btnMindmap;
   document.getElementById('btn-guide-label').innerText = dict.btnGuide;
   document.getElementById('mm-modal-title').innerHTML = '<span>🗺️</span> ' + dict.mmModalTitle;
@@ -773,6 +902,7 @@ function setLanguage(lang) {
   document.querySelectorAll('.btn-compute').forEach(b => b.innerText = dict.btnCompute);
   document.querySelectorAll('.btn-copy').forEach(b => b.innerText = dict.btnCopy);
   document.querySelectorAll('.btn-reset').forEach(b => b.innerText = dict.btnReset);
+  document.querySelectorAll('.ai-btn-text').forEach(b => b.innerText = dict.btnAiAudit);
   var addCpm = document.getElementById('btn-add-cpm');
   if (addCpm) addCpm.innerText = dict.btnAddRow;
   var remCpm = document.getElementById('btn-rem-cpm');
@@ -802,6 +932,12 @@ function setLanguage(lang) {
 function openModal(id) {
   var m = document.getElementById(id);
   if (m) m.classList.add('open');
+  if (id === 'modal-ai-chat') {
+    initAiChatWelcome();
+    scrollAiChatToBottom();
+  } else if (id === 'modal-ai-settings') {
+    loadSettingsInputs();
+  }
 }
 function closeModal(id) {
   var m = document.getElementById(id);
@@ -907,12 +1043,9 @@ function computeEVM(){
   h += rl('TCPI_BAC', 'TCPI_BAC', '(BAC - EV) / (BAC - AC)', tcpi_bac);
   h += rl('TCPI_EAC', 'TCPI_EAC', '(BAC - EV) / (EAC - AC)', tcpi_eac);
 
-  // Analysis
   if (!isNaN(cpi) && !isNaN(spi)){
     var badge = '', badgeClass = 'badge-good';
-    var meaning = '', reco = '';
     var isCostOk = cpi >= 1, isSchedOk = spi >= 1;
-    
     if (isCostOk && isSchedOk) {
       badge = currentLang === 'vi' ? 'DỰ ÁN HIỆU QUẢ CAO' : (currentLang === 'zh' ? '项目表现极佳' : 'HEALTHY PROJECT');
       badgeClass = 'badge-good';
@@ -924,46 +1057,19 @@ function computeEVM(){
       badgeClass = 'badge-warn';
     }
 
-    if (currentLang === 'vi') {
-      meaning = '<ul>' +
-        '<li><strong>Chi phí (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Tiết kiệm. Mỗi 1$ chi ra tạo được ' + cpi.toFixed(2) + '$ giá trị hoàn thành.' : 'Bội chi. Mỗi 1$ chi ra chỉ đem lại ' + cpi.toFixed(2) + '$ giá trị (lỗ ' + ((1-cpi)*100).toFixed(1) + '%).') + '</li>' +
-        '<li><strong>Tiến độ (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Vượt hoặc đúng tiến độ kế hoạch.' : 'Chậm tiến độ (khối lượng đạt ' + (spi*100).toFixed(1) + '% so với kế hoạch).') + '</li>' +
-        '<li><strong>Dự báo hoàn thành (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (Chênh lệch VAC: ' + (!isNaN(vac) ? (vac>=0?'+':'')+fv(vac) : 'N/A') + ').</li>' +
-        '<li><strong>Hiệu suất cần đạt (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ Vượt ngưỡng 1.2 (ngân sách BAC ban đầu là phi thực tế).' : ' (Trong giới hạn kiểm soát).') + '</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        (!isCostOk ? '<li><strong>Cải tiến chi phí:</strong> Rà soát Value Engineering, loại bỏ tính năng ngoài phạm vi (Gold plating), siết định mức chi tiêu.</li>' : '<li><strong>Duy trì chi phí:</strong> Tiếp tục kiểm soát chặt chẽ các hợp đồng mua sắm thầu phụ.</li>') +
-        (!isSchedOk ? '<li><strong>Đẩy nhanh tiến độ:</strong> Thực hiện Fast-tracking (chạy song song công việc) hoặc Crashing (bổ sung nhân lực vào đường găng).</li>' : '<li><strong>Tiến độ:</strong> Duy trì nhịp độ hiện tại, giải phóng bớt tài nguyên cho giai đoạn tiếp theo.</li>') +
-        (tcpi_bac > 1.2 ? '<li><strong>Điều chỉnh ngân sách:</strong> Đệ trình ngay Change Request lên Sponsor để duyệt lại ngân sách mới theo EAC.</li>' : '') +
-      '</ul>';
-    } else if (currentLang === 'zh') {
-      meaning = '<ul>' +
-        '<li><strong>成本绩效 (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? '成本节约，每支出1元产生 ' + cpi.toFixed(2) + ' 元价值。' : '成本超支，每支出1元仅获得 ' + cpi.toFixed(2) + ' 元价值。') + '</li>' +
-        '<li><strong>进度绩效 (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? '进度超前或符合计划。' : '进度落后，仅完成计划的 ' + (spi*100).toFixed(1) + '%。') + '</li>' +
-        '<li><strong>完工估算 (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (完工偏差 VAC: ' + (!isNaN(vac) ? fv(vac) : 'N/A') + ')。</li>' +
-        '<li><strong>未来绩效指数 (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ 超过1.2，原预算BAC已不切实际。' : ' (可实现范围)。') + '</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        (!isCostOk ? '<li><strong>成本优化:</strong> 开展价值工程分析，削减非关键范围，严格把控直接成本。</li>' : '') +
-        (!isSchedOk ? '<li><strong>进度优化:</strong> 采用快速跟进 (Fast-tracking) 或赶工 (Crashing) 策略压缩关键路径。</li>' : '') +
-        (tcpi_bac > 1.2 ? '<li><strong>基准变更:</strong> 向项目发起人申请调整成本基准，以新的 EAC 作为目标。</li>' : '') +
-      '</ul>';
-    } else {
-      meaning = '<ul>' +
-        '<li><strong>Cost Performance (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Cost efficient: $1 spent produces $' + cpi.toFixed(2) + ' value.' : 'Over budget: $1 spent only yields $' + cpi.toFixed(2) + ' value.') + '</li>' +
-        '<li><strong>Schedule Performance (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Ahead of or on schedule.' : 'Behind schedule (progressing at ' + (spi*100).toFixed(1) + '% of planned speed).') + '</li>' +
-        '<li><strong>Forecast at Completion (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (Variance VAC: ' + (!isNaN(vac) ? fv(vac) : 'N/A') + ').</li>' +
-        '<li><strong>To-Complete Index (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ Exceeds 1.2 hurdle; original BAC is unrealistic.' : ' (Manageable).') + '</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        (!isCostOk ? '<li><strong>Cost Action:</strong> Apply Value Engineering, eliminate scope creep (gold plating), renegotiate vendor rates.</li>' : '') +
-        (!isSchedOk ? '<li><strong>Schedule Action:</strong> Fast-track parallel tasks or crash critical path activities with low cost slopes.</li>' : '') +
-        (tcpi_bac > 1.2 ? '<li><strong>Re-baseline:</strong> Submit formal Change Request to Sponsor to approve updated EAC baseline.</li>' : '') +
-      '</ul>';
-    }
+    var meaning = '<ul>' +
+      '<li><strong>Chi phí (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Tiết kiệm chi phí. 1$ chi ra thu được ' + cpi.toFixed(2) + '$ giá trị hoàn thành.' : 'Bội chi. 1$ chi ra chỉ thu về ' + cpi.toFixed(2) + '$ giá trị (thất thoát ' + ((1-cpi)*100).toFixed(1) + '%).') + '</li>' +
+      '<li><strong>Tiến độ (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Vượt kế hoạch tiến độ.' : 'Chậm tiến độ (khối lượng thực hiện đạt ' + (spi*100).toFixed(1) + '% so với kế hoạch).') + '</li>' +
+      '<li><strong>Dự báo hoàn thành (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (Chênh lệch VAC: ' + (!isNaN(vac) ? (vac>=0?'+':'')+fv(vac) : 'N/A') + ').</li>' +
+      '<li><strong>Hiệu suất cần đạt (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ Vượt 1.2, ngân sách BAC bất khả thi.' : ' (Trong tầm kiểm soát).') + '</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (!isCostOk ? '<li><strong>Kiểm soát chi phí:</strong> Áp dụng Value Engineering, rà soát loại bỏ Scope creep (tính năng vượt ngoài hợp đồng).</li>' : '') +
+      (!isSchedOk ? '<li><strong>Thúc đẩy tiến độ:</strong> Thực hiện Fast-tracking (chạy song song công việc) hoặc Crashing đường găng.</li>' : '') +
+      (tcpi_bac > 1.2 ? '<li><strong>Điều chỉnh ngân sách:</strong> Đệ trình ngay Change Request lên Sponsor để duyệt ngân sách mới theo EAC.</li>' : '') +
+    '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
-
   document.getElementById('tab-1-output').innerHTML = h;
 }
 
@@ -1066,39 +1172,15 @@ function computeCPM(){
   h += '<div data-tag="dur">dur = ' + projDur.toFixed(4) + '</div>';
   h += '<div data-tag="path">path = ' + bestPath.join('->') + '</div>';
 
-  // Analysis
-  var badge = currentLang === 'vi' ? 'ĐƯỜNG GĂNG (CRITICAL PATH)' : (currentLang === 'zh' ? '关键路径分析' : 'CRITICAL PATH IDENTIFIED');
-  var meaning = '', reco = '';
-  if (currentLang === 'vi') {
-    meaning = '<ul>' +
-      '<li><strong>Tổng thời gian dự án:</strong> ' + projDur.toFixed(2) + ' ngày/kỳ.</li>' +
-      '<li><strong>Đường găng:</strong> <code>' + bestPath.join(' &rarr; ') + '</code>. Các hoạt động này có Total Float = 0 (trễ 1 ngày sẽ làm lùi ngày hoàn thành toàn dự án 1 ngày).</li>' +
-      '<li><strong>Dự trữ thời gian (Float):</strong> Các hoạt động ngoài đường găng có thể linh hoạt điều phối nhân lực.</li>' +
-    '</ul>';
-    reco = '<ul>' +
-      '<li><strong>Bảo vệ đường găng:</strong> Ưu tiên nguồn lực chất lượng cao nhất cho các hoạt động: ' + bestPath.join(', ') + '.</li>' +
-      '<li><strong>Rút ngắn tiến độ (Schedule Crashing):</strong> Nếu cần hoàn thành sớm hơn ' + projDur.toFixed(1) + ' ngày, chỉ bổ sung nhân lực cho hoạt động thuộc đường găng có chi phí gia tốc thấp nhất.</li>' +
-      '<li><strong>Cân bằng tài nguyên (Resource Leveling):</strong> Điều chuyển nhân sự từ hoạt động có Total Float cao sang hỗ trợ đường găng.</li>' +
-    '</ul>';
-  } else if (currentLang === 'zh') {
-    meaning = '<ul>' +
-      '<li><strong>项目总工期:</strong> ' + projDur.toFixed(2) + ' 个周期。</li>' +
-      '<li><strong>关键路径:</strong> <code>' + bestPath.join(' &rarr; ') + '</code> (总浮动时间 TF = 0，不可产生任何延误)。</li>' +
-    '</ul>';
-    reco = '<ul>' +
-      '<li><strong>保护关键路径:</strong> 确保关键活动资源充足，避免关键路径发生瓶颈。</li>' +
-      '<li><strong>工期压缩:</strong> 仅针对关键路径上的低成本斜率活动进行赶工或快速跟进。</li>' +
-    '</ul>';
-  } else {
-    meaning = '<ul>' +
-      '<li><strong>Total Project Duration:</strong> ' + projDur.toFixed(2) + ' time units.</li>' +
-      '<li><strong>Critical Path:</strong> <code>' + bestPath.join(' &rarr; ') + '</code> (Total Float = 0, zero delay tolerance).</li>' +
-    '</ul>';
-    reco = '<ul>' +
-      '<li><strong>Critical Path Protection:</strong> Prioritize top resources for critical activities: ' + bestPath.join(', ') + '.</li>' +
-      '<li><strong>Schedule Compression:</strong> Crash only critical path activities with the lowest cost slopes.</li>' +
-    '</ul>';
-  }
+  var badge = currentLang === 'vi' ? 'ĐƯỜNG GĂNG (CRITICAL PATH)' : 'CRITICAL PATH IDENTIFIED';
+  var meaning = '<ul>' +
+    '<li><strong>Tổng thời gian dự án:</strong> ' + projDur.toFixed(2) + ' ngày/kỳ.</li>' +
+    '<li><strong>Đường găng:</strong> <code>' + bestPath.join(' &rarr; ') + '</code>. Các hoạt động này có Total Float = 0 (trễ 1 ngày là trễ toàn bộ dự án).</li>' +
+  '</ul>';
+  var reco = '<ul>' +
+    '<li><strong>Bảo vệ đường găng:</strong> Ưu tiên tài nguyên tốt nhất cho các công việc: ' + bestPath.join(', ') + '.</li>' +
+    '<li><strong>Rút ngắn thời gian:</strong> Nếu cần Crashing, chỉ bổ sung nhân lực cho hoạt động thuộc đường găng có chi phí gia tốc thấp nhất.</li>' +
+  '</ul>';
   h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
 
   document.getElementById('tab-2-output').innerHTML = h;
@@ -1123,16 +1205,14 @@ function computeCost(){
     var badgeClass = (bv >= 0 && ru <= 90 && ru >= 65) ? 'badge-good' : 'badge-warn';
     var meaning = '<ul>' +
       '<li><strong>Chênh lệch ngân sách (BV = ' + fv(bv) + '):</strong> ' + (bv >= 0 ? 'Dư tiền mặt so với ngân sách.' : 'Đã chi vượt hạn mức ngân sách.') + '</li>' +
-      '<li><strong>Tỷ lệ sử dụng tài nguyên (RU% = ' + fv(ru) + '%):</strong> ' + (ru > 90 ? '⚠️ Quá tải (rủi ro kiệt sức và phát sinh lỗi).' : (ru < 65 ? 'Dưới mức khai thác (lãng phí nguồn lực).' : 'Trong ngưỡng lý tưởng (70-85%).')) + '</li>' +
+      '<li><strong>Tỷ lệ sử dụng tài nguyên (RU% = ' + fv(ru) + '%):</strong> ' + (ru > 90 ? '⚠️ Quá tải (rủi ro kiệt sức và phát sinh lỗi).' : (ru < 65 ? 'Dưới mức khai thác.' : 'Trong ngưỡng lý tưởng (70-85%).')) + '</li>' +
     '</ul>';
     var reco = '<ul>' +
       (ru > 90 ? '<li><strong>Giảm tải:</strong> Điều hòa tài nguyên (Resource Leveling) và bổ sung nhân sự dự phòng.</li>' : '') +
       (ru < 65 ? '<li><strong>Tối ưu năng suất:</strong> Tái phân bổ nhân sự sang các công việc đường găng để tăng tốc độ bàn giao.</li>' : '') +
-      (bv < 0 ? '<li><strong>Kiểm soát ngân sách:</strong> Siết chặt quy trình phê duyệt chi phí mua ngoài.</li>' : '') +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
-
   document.getElementById('tab-3-output').innerHTML = h;
 }
 
@@ -1158,12 +1238,10 @@ function computeQuality(){
       '<li><strong>Chi phí chất lượng (CoQ = ' + fv(coq) + '):</strong> Chi phí tuân thủ (Phòng ngừa + Đánh giá: ' + fv(prev+appr) + ') vs Chi phí sai sót (Nội bộ + Bên ngoài: ' + fv(intF+extF) + ').</li>' +
     '</ul>';
     var reco = '<ul>' +
-      '<li><strong>Chiến lược chất lượng:</strong> Đầu tư ngân sách vào Chi phí Phòng ngừa (đào tạo, checklist, tự động hóa kiểm thử) để triệt tiêu Chi phí Thất thoát bên ngoài (bồi thường, bảo hành, mất uy tín).</li>' +
-      '<li><strong>Loại bỏ lãng phí:</strong> Áp dụng Lean / Kaizen để tìm nguyên nhân gốc rễ (Root Cause Analysis - 5 Whys).</li>' +
+      '<li><strong>Chiến lược chất lượng:</strong> Đầu tư ngân sách vào Chi phí Phòng ngừa (đào tạo, checklist, tự động hóa) để triệt tiêu Chi phí Thất thoát bên ngoài (bồi thường, bảo hành).</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
-
   document.getElementById('tab-4-output').innerHTML = h;
 }
 
@@ -1208,12 +1286,11 @@ function computeRisk(){
       '<li><strong>Chỉ số ưu tiên rủi ro (RPN = ' + fv(rpn) + '):</strong> ' + (isHighRisk ? '⚠️ Mức rủi ro cao hoặc mức độ nghiêm trọng lớn (Sev >= 8).' : 'Mức độ rủi ro trung bình / thấp.') + '</li>' +
     '</ul>';
     var reco = '<ul>' +
-      (isHighRisk ? '<li><strong>Phương án ứng phó khẩn cấp:</strong> Áp dụng chiến lược Giảm thiểu (Mitigate) hoặc Chuyển giao rủi ro (Transfer qua bảo hiểm/hợp đồng phụ).</li>' : '') +
-      '<li><strong>Trích lập dự phòng:</strong> Đưa đúng giá trị EMV vào ngân sách dự phòng rủi ro đã xác định (Contingency Reserve).</li>' +
+      (isHighRisk ? '<li><strong>Ứng phó khẩn cấp:</strong> Áp dụng chiến lược Giảm thiểu (Mitigate) hoặc Chuyển giao rủi ro (Transfer).</li>' : '') +
+      '<li><strong>Trích lập dự phòng:</strong> Đưa đúng giá trị EMV vào ngân sách dự phòng rủi ro (Contingency Reserve).</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
-
   document.getElementById('tab-5-output').innerHTML = h;
 }
 
@@ -1236,17 +1313,15 @@ function computeProcurement(){
   if (decision === 'MAKE' || decision === 'BUY'){
     var badge = currentLang === 'vi' ? ('QUYẾT ĐỊNH: ' + (decision==='MAKE'?'TỰ LÀM (MAKE)':'MUA NGOÀI (BUY)')) : ('DECISION: ' + decision);
     var meaning = '<ul>' +
-      '<li><strong>Tổng chi phí sở hữu (TCO = ' + fv(tco) + '):</strong> Đã tính cả chi phí vận hành bảo trì trong ' + (isNaN(yrs)?'0':yrs) + ' năm.</li>' +
-      '<li><strong>So sánh phương án:</strong> Chi phí tự sản xuất = ' + fv(make) + ' vs Mua ngoài = ' + fv(buy) + ' (Tiết kiệm được: ' + fv(Math.abs(make - buy)) + ').</li>' +
-      '<li><strong>Hiệu suất nhà thầu (SPI = ' + fv(spi) + '):</strong> ' + (spi < 0.95 ? '⚠️ Nhà cung cấp giao hàng chậm so với cam kết.' : 'Nhà cung cấp đáp ứng tốt cam kết hợp đồng.') + '</li>' +
+      '<li><strong>Tổng chi phí sở hữu (TCO = ' + fv(tco) + '):</strong> Bao gồm chi phí vận hành bảo trì trong ' + (isNaN(yrs)?'0':yrs) + ' năm.</li>' +
+      '<li><strong>So sánh phương án:</strong> Chi phí tự làm = ' + fv(make) + ' vs Mua ngoài = ' + fv(buy) + ' (Tiết kiệm: ' + fv(Math.abs(make - buy)) + ').</li>' +
+      '<li><strong>Hiệu suất nhà thầu (SPI = ' + fv(spi) + '):</strong> ' + (spi < 0.95 ? '⚠️ Giao hàng chậm so với cam kết.' : 'Đáp ứng tốt cam kết hợp đồng.') + '</li>' +
     '</ul>';
     var reco = '<ul>' +
-      (decision === 'MAKE' ? '<li><strong>Thực thi Make:</strong> Đảm bảo năng lực kỹ thuật nội bộ và kiểm soát chi phí cố định.</li>' : '<li><strong>Thực thi Buy:</strong> Ký kết hợp đồng bảo lãnh chất lượng và cam kết SLA chi tiết.</li>') +
-      (spi < 0.95 ? '<li><strong>Xử lý nhà thầu:</strong> Kích hoạt điều khoản phạt hợp đồng và yêu cầu kế hoạch khắc phục tiến độ (Recovery Plan).</li>' : '') +
+      (decision === 'MAKE' ? '<li><strong>Thực thi Make:</strong> Đảm bảo năng lực kỹ thuật và quy mô đủ lớn để khấu hao chi phí cố định.</li>' : '<li><strong>Thực thi Buy:</strong> Ký kết hợp đồng ràng buộc chất lượng và SLA chi tiết.</li>') +
     '</ul>';
     h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
   }
-
   document.getElementById('tab-6-output').innerHTML = h;
 }
 
@@ -1265,18 +1340,16 @@ function computeStakeholder(){
   if (quad.indexOf('?') === -1){
     var badge = (currentLang === 'vi' ? 'MA TRẬN QUYỀN LỰC: ' : 'STAKEHOLDER QUADRANT: ') + quad;
     var meaning = '<ul>' +
-      '<li><strong>Vị trí phân loại:</strong> ' + (quad === 'High/High' ? 'Quyền lực cao / Mối quan tâm cao (Bên liên quan then chốt).' : (quad === 'High/Low' ? 'Quyền lực cao / Quan tâm thấp.' : (quad === 'Low/High' ? 'Quan tâm cao / Quyền lực thấp.' : 'Quan tâm thấp / Quyền lực thấp.'))) + '</li>' +
+      '<li><strong>Phân nhóm:</strong> ' + (quad === 'High/High' ? 'Quyền lực cao / Mối quan tâm cao (Bên liên quan then chốt).' : (quad === 'High/Low' ? 'Quyền lực cao / Quan tâm thấp.' : (quad === 'Low/High' ? 'Quan tâm cao / Quyền lực thấp.' : 'Quan tâm thấp / Quyền lực thấp.'))) + '</li>' +
       '<li><strong>Chỉ số quan trọng (SII = ' + fv(sii) + ') & Cam kết (EI = ' + fv(ei) + ').</strong></li>' +
     '</ul>';
     var reco = '<ul>' +
-      (quad === 'High/High' ? '<li><strong>Chiến lược Manage Closely:</strong> Tham vấn ý kiến định kỳ, ưu tiên phản hồi và báo cáo tiến độ trực tiếp.</li>' : '') +
-      (quad === 'High/Low' ? '<li><strong>Chiến lược Keep Satisfied:</strong> Cung cấp thông tin súc tích, giữ thái độ ủng hộ để tránh rủi ro phủ quyết dự án.</li>' : '') +
-      (quad === 'Low/High' ? '<li><strong>Chiến lược Keep Informed:</strong> Tận dụng sự ủng hộ nhiệt tình của họ như những đại sứ dự án.</li>' : '') +
-      (quad === 'Low/Low' ? '<li><strong>Chiến lược Monitor:</strong> Theo dõi định kỳ, tránh làm quá tải truyền thông.</li>' : '') +
+      (quad === 'High/High' ? '<li><strong>Manage Closely:</strong> Tham vấn ý kiến định kỳ, ưu tiên phản hồi và báo cáo tiến độ trực tiếp.</li>' : '') +
+      (quad === 'High/Low' ? '<li><strong>Keep Satisfied:</strong> Cung cấp thông tin súc tích, tránh để họ chuyển sang thái độ phản đối.</li>' : '') +
+      (quad === 'Low/High' ? '<li><strong>Keep Informed:</strong> Giữ liên lạc thường xuyên để phát huy sự ủng hộ của họ.</li>' : '') +
     '</ul>';
     h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
   }
-
   document.getElementById('tab-7-output').innerHTML = h;
 }
 
@@ -1296,16 +1369,15 @@ function computeComm(){
     var badge = isOverload ? (currentLang === 'vi' ? 'CẢNH BÁO QUÁ TẢI TRUYỀN THÔNG' : 'COMMUNICATION OVERLOAD') : (currentLang === 'vi' ? 'GIAO TIẾP HIỆU QUẢ' : 'HEALTHY COMMUNICATION');
     var badgeClass = isOverload ? 'badge-warn' : 'badge-good';
     var meaning = '<ul>' +
-      '<li><strong>Kênh giao tiếp (CH = ' + fv(ch) + '):</strong> Với ' + n + ' thành viên, có tới ' + fv(ch) + ' kênh liên lạc chéo. Số kênh tăng theo cấp số nhân O(N^2).</li>' +
-      '<li><strong>Chỉ số quá tải (OI = ' + fv(oi) + '):</strong> ' + (oi > 1.2 ? 'Lượng thông tin gửi đi vượt quá khả năng tiếp nhận xử lý.' : 'Thông tin được xử lý kịp thời.') + '</li>' +
+      '<li><strong>Kênh giao tiếp (CH = ' + fv(ch) + '):</strong> Với ' + n + ' thành viên, có tới ' + fv(ch) + ' kênh liên lạc độc lập (tăng theo cấp số nhân O(N^2)).</li>' +
+      '<li><strong>Chỉ số quá tải (OI = ' + fv(oi) + '):</strong> ' + (oi > 1.2 ? 'Lượng thông tin gửi đi vượt quá khả năng xử lý.' : 'Thông tin được xử lý kịp thời.') + '</li>' +
     '</ul>';
     var reco = '<ul>' +
-      (n > 10 ? '<li><strong>Tái cấu trúc đội ngũ:</strong> Chia nhóm lớn thành các sub-team (Quy tắc 2-Pizza team: 5-8 người) với 1 đầu mối liên lạc (SPOC) để giảm kênh truyền thông.</li>' : '') +
-      '<li><strong>Tập trung hóa thông tin:</strong> Sử dụng Project Dashboard, Kanban board thay vì gửi chuỗi email tràn lan.</li>' +
+      (n > 10 ? '<li><strong>Tái cấu trúc:</strong> Chia nhóm lớn thành các sub-team (mô hình 2-Pizza team: 5-8 người) với 1 đầu mối đại diện (SPOC).</li>' : '') +
+      '<li><strong>Tập trung hóa:</strong> Sử dụng Project Dashboard, Kanban thay vì gửi email chuỗi dài.</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
-
   document.getElementById('tab-8-output').innerHTML = h;
 }
 
@@ -1341,19 +1413,18 @@ function computeBenefit(){
 
   if (!isNaN(npv) && !isNaN(bcr)){
     var isGood = npv > 0 && bcr > 1;
-    var badge = isGood ? (currentLang === 'vi' ? 'DỰ ÁN CÓ HIỆU QUẢ KINH DOANH CAO' : 'COMMERCIALLY VIABLE') : (currentLang === 'vi' ? 'DỰ ÁN KHÔNG ĐỦ HIỆU QUẢ' : 'UNVIABLE BENEFIT');
+    var badge = isGood ? (currentLang === 'vi' ? 'DỰ ÁN HIỆU QUẢ KINH DOANH CAO' : 'COMMERCIALLY VIABLE') : (currentLang === 'vi' ? 'DỰ ÁN KHÔNG ĐỦ HIỆU QUẢ' : 'UNVIABLE BENEFIT');
     var badgeClass = isGood ? 'badge-good' : 'badge-bad';
     var meaning = '<ul>' +
-      '<li><strong>Tỷ số lợi ích/chi phí (BCR = ' + fv(bcr) + '):</strong> ' + (bcr > 1 ? 'Mỗi 1$ đầu tư tạo ra ' + fv(bcr) + '$ lợi ích tổng thể.' : 'Lợi ích không đủ bù đắp vốn bỏ ra.') + '</li>' +
-      '<li><strong>ROI (' + fv(roi) + '%):</strong> Tỷ suất sinh lời trên vốn đầu tư.</li>' +
-      '<li><strong>Thời gian hoàn vốn:</strong> ' + fv(payback) + ' kỳ. Hoàn vốn càng sớm thì rủi ro thanh khoản càng thấp.</li>' +
+      '<li><strong>Tỷ số lợi ích/chi phí (BCR = ' + fv(bcr) + '):</strong> ' + (bcr > 1 ? 'Mỗi 1$ đầu tư tạo ra ' + fv(bcr) + '$ lợi ích tổng thể.' : 'Lợi ích không bù đắp được chi phí ban đầu.') + '</li>' +
+      '<li><strong>ROI (' + fv(roi) + '%):</strong> Tỷ suất sinh lời trên vốn.</li>' +
+      '<li><strong>Thời gian hoàn vốn:</strong> ' + fv(payback) + ' kỳ.</li>' +
     '</ul>';
     var reco = '<ul>' +
-      (isGood ? '<li><strong>Thực thi:</strong> Đề xuất thông qua Business Case và phê duyệt Project Charter.</li>' : '<li><strong>Tối ưu hóa:</strong> Front-load doanh thu (đẩy sớm thời điểm thu tiền) để rút ngắn Payback và tăng NPV.</li>') +
+      (isGood ? '<li><strong>Phê duyệt:</strong> Đề xuất thông qua Business Case và phê duyệt Project Charter.</li>' : '<li><strong>Tối ưu hóa:</strong> Front-load doanh thu sớm để rút ngắn Payback và tăng NPV.</li>') +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
-
   document.getElementById('tab-9-output').innerHTML = h;
 }
 
@@ -1376,7 +1447,7 @@ function computePERT(){
     var p1 = bMean + bSD, p2 = bMean + 2 * bSD;
     var meaning = '<ul>' +
       '<li><strong>Thời gian kỳ vọng (Beta Mean = ' + fv(bMean) + '):</strong> Giá trị trung bình có trọng số (ưu tiên phương án Most Likely 4x).</li>' +
-      '<li><strong>Độ lệch chuẩn (&sigma; = ' + fv(bSD) + '):</strong> Thể hiện biên độ rủi ro bất định.</li>' +
+      '<li><strong>Độ lệch chuẩn (&sigma; = ' + fv(bSD) + '):</strong> Biên độ rủi ro bất định.</li>' +
       '<li><strong>Xác suất cam kết hoàn thành:</strong>' +
         '<ul>' +
           '<li>68.3% cơ hội hoàn thành trước: <strong>' + p1.toFixed(2) + '</strong> (+1&sigma;)</li>' +
@@ -1385,12 +1456,11 @@ function computePERT(){
       '</li>' +
     '</ul>';
     var reco = '<ul>' +
-      '<li><strong>Quy tắc cam kết:</strong> Tuyệt đối không cam kết theo mốc Lạc quan (O) hoặc Khả dĩ nhất (M). Hãy sử dụng mốc &mu; + 1&sigma; (' + p1.toFixed(1) + ') hoặc &mu; + 2&sigma; (' + p2.toFixed(1) + ') để có đệm an toàn (Buffer) cho dự án.</li>' +
-      '<li><strong>Giảm rủi ro:</strong> Nếu khoảng cách (P - O) quá rộng, áp dụng phương pháp chuyên gia Delphi để thu hẹp độ phân tán.</li>' +
+      '<li><strong>Cam kết an toàn:</strong> Sử dụng mốc &mu; + 1&sigma; (' + p1.toFixed(1) + ') hoặc &mu; + 2&sigma; (' + p2.toFixed(1) + ') làm đệm dự phòng (Buffer).</li>' +
+      '<li><strong>Thu hẹp độ phân tán:</strong> Tham vấn chuyên gia theo phương pháp Delphi để giảm khoảng cách (P - O).</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
   }
-
   document.getElementById('tab-10-output').innerHTML = h;
 }
 
@@ -1443,92 +1513,43 @@ function computeFinance(){
   h += rl('IRR', 'IRR', 'Bisection [-0.99, 10]', irr);
   h += rl('Payback', 'Payback', 'Linear Interpolation', payback);
 
-  // Deep Financial & Technical Analysis
   var badge = '', badgeClass = 'badge-good';
   var meaning = '', reco = '';
   
   if (cfs.length === 1 && cfs[0] < 0) {
-    // Single negative cash flow with no future returns (like in the user screenshot!)
     badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (CHỈ CÓ CHI PHÍ, CHƯA CÓ DOANH THU)' : (currentLang === 'zh' ? '项目不可行 (仅有成本流出，无现金回收)' : 'REJECT (OUTFLOW ONLY, NO FUTURE INFLOWS)');
     badgeClass = 'badge-bad';
-    if (currentLang === 'vi') {
-      meaning = '<ul>' +
-        '<li><strong>Giá trị hiện tại thuần (NPV = ' + fv(npv) + '):</strong> Bị âm toàn bộ chi phí vốn. Dự án làm sụt giảm giá trị tài chính do chưa có dòng tiền dương bù đắp.</li>' +
-        '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> do không có dòng tiền đổi dấu (cần ít nhất một dòng tiền dương trong tương lai để xác định tỷ suất sinh lời và thời gian hòa vốn).</li>' +
-        (rate > 1 ? '<li><strong>Lưu ý về Discount Rate (' + rate + '):</strong> Suất chiết khấu đang được nhập rất lớn (thường suất chiết khấu trong thực tế dao động từ 8% đến 15%, ví dụ 0.10 thay vì số hàng nghìn).</li>' : '') +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>Nhập bổ sung dòng tiền:</strong> Thêm các kỳ doanh thu / dòng tiền thu về trong tương lai vào ô Cash Flows (ví dụ: <code>-453535, 150000, 200000, 250000</code>).</li>' +
-        '<li><strong>Điều chỉnh suất chiết khấu:</strong> Sử dụng lãi suất chiết khấu chuẩn hóa phản ánh chi phí vốn bình quân WACC (ví dụ nhập <code>0.10</code> tương đương 10%/năm).</li>' +
-        '<li><strong>Nếu đây là dự án phi lợi nhuận / chi phí nội bộ:</strong> Cần đánh giá theo phương diện Tổng chi phí sở hữu (TCO tại Tab 6) thay vì thẩm định NPV tài chính thuần túy.</li>' +
-      '</ul>';
-    } else if (currentLang === 'zh') {
-      meaning = '<ul>' +
-        '<li><strong>净现值 (NPV = ' + fv(npv) + '):</strong> 全额亏损，项目将破坏企业财务价值。</li>' +
-        '<li><strong>内部收益率 (IRR) & 回收期:</strong> <code>INVALID INPUT</code>，缺少未来正向现金流入，无法测算投资回报率。</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>补充未来现金流:</strong> 在输入框补充各期预期流入现金 (例如 <code>-453535, 150000, 200000, 250000</code>)。</li>' +
-        '<li><strong>合理设置折现率:</strong> 折现率通常设为资本加权成本 WACC (如 0.08 到 0.15)。</li>' +
-      '</ul>';
-    } else {
-      meaning = '<ul>' +
-        '<li><strong>Net Present Value (NPV = ' + fv(npv) + '):</strong> Negative value destruction. Only initial expenditure is recorded without revenue recovery.</li>' +
-        '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> because no positive cash inflows exist to calculate breakeven or internal yield.</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>Add Future Cash Inflows:</strong> Provide projected positive revenues across future periods (e.g. <code>-453535, 150000, 200000, 250000</code>).</li>' +
-        '<li><strong>Normalize Discount Rate:</strong> Input standard cost of capital rate (e.g. <code>0.10</code> for 10% WACC).</li>' +
-      '</ul>';
-    }
+    meaning = '<ul>' +
+      '<li><strong>Giá trị hiện tại thuần (NPV = ' + fv(npv) + '):</strong> Bị âm toàn bộ chi phí vốn. Dự án làm sụt giảm giá trị tài chính do chưa có dòng tiền dương bù đắp.</li>' +
+      '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> do không có dòng tiền đổi dấu (cần ít nhất một dòng tiền dương trong tương lai để xác định tỷ suất sinh lời và thời gian hòa vốn).</li>' +
+      (rate > 1 ? '<li><strong>Lưu ý về Discount Rate (' + rate + '):</strong> Suất chiết khấu đang được nhập rất lớn (chuẩn thực tế thường từ 0.08 đến 0.15 tương đương 8% - 15%, ví dụ 0.10 thay vì số hàng nghìn).</li>' : '') +
+    '</ul>';
+    reco = '<ul>' +
+      '<li><strong>Bổ sung dòng tiền thu:</strong> Thêm các kỳ doanh thu dương trong tương lai vào ô Cash Flows (ví dụ: <code>-453535, 150000, 200000, 250000</code>).</li>' +
+      '<li><strong>Điều chỉnh suất chiết khấu:</strong> Sử dụng lãi suất chiết khấu chuẩn hóa phản ánh chi phí vốn WACC (ví dụ nhập <code>0.10</code>).</li>' +
+      '<li><strong>Dự án chi phí nội bộ:</strong> Đánh giá theo Tổng chi phí sở hữu (TCO tại Tab 6) thay vì thẩm định NPV.</li>' +
+    '</ul>';
   } else if (npv > 0) {
     badge = currentLang === 'vi' ? 'DỰ ÁN KHẢ THI CAO VỀ TÀI CHÍNH (CHẤP THUẬN)' : (currentLang === 'zh' ? '财务高度可行 (建议采纳)' : 'FINANCIALLY VIABLE (ACCEPT PROJECT)');
     badgeClass = 'badge-good';
-    if (currentLang === 'vi') {
-      meaning = '<ul>' +
-        '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> Dự án sinh lời vượt trên chi phí cơ hội của vốn. Tạo thêm thặng dư giá trị tài sản cho doanh nghiệp.</li>' +
-        '<li><strong>IRR (' + (isNaN(irr) ? 'N/A' : (irr*100).toFixed(2) + '%') + '):</strong> ' + (!isNaN(irr) ? (irr > rate ? 'Tỷ suất hoàn vốn nội bộ cao hơn suất chiết khấu mong đợi (' + (rate*100).toFixed(1) + '%).' : 'IRR thấp hơn suất chiết khấu.') : 'N/A') + '</li>' +
-        '<li><strong>Thời gian hoàn vốn (Payback):</strong> ' + (!isNaN(payback) ? payback.toFixed(2) + ' kỳ' : 'N/A') + '.</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>Quyết định đầu tư:</strong> Phê duyệt thực hiện dự án. Ưu tiên giải ngân theo các cột mốc bàn giao (Milestone payments).</li>' +
-        '<li><strong>Phòng ngừa rủi ro tài chính:</strong> Quản lý chặt trượt giá và chi phí vận hành để đảm bảo dòng tiền thực tế bám sát mô hình dự báo.</li>' +
-      '</ul>';
-    } else if (currentLang === 'zh') {
-      meaning = '<ul>' +
-        '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> 净现值大于0，项目带来超额财务价值。</li>' +
-        '<li><strong>IRR:</strong> ' + (!isNaN(irr) ? (irr*100).toFixed(2) + '%' : 'N/A') + '，高于基准资本成本。</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>投资决策:</strong> 建议正式立项实施，按交付里程碑控制分期付款。</li>' +
-      '</ul>';
-    } else {
-      meaning = '<ul>' +
-        '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> Generates positive economic value after covering the cost of capital.</li>' +
-        '<li><strong>IRR (' + (!isNaN(irr) ? (irr*100).toFixed(2) + '%' : 'N/A') + '):</strong> Exceeds hurdle discount rate (' + (rate*100).toFixed(1) + '%).</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>Investment Verdict:</strong> Accept project. Tie cash outflows strictly to validated deliverables.</li>' +
-      '</ul>';
-    }
+    meaning = '<ul>' +
+      '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> Dự án sinh lời vượt trên chi phí cơ hội của vốn. Tạo thêm thặng dư giá trị tài sản cho doanh nghiệp.</li>' +
+      '<li><strong>IRR (' + (!isNaN(irr) ? (irr*100).toFixed(2) + '%' : 'N/A') + '):</strong> ' + (!isNaN(irr) ? (irr > rate ? 'Cao hơn suất chiết khấu (' + (rate*100).toFixed(1) + '%).' : 'Thấp hơn suất chiết khấu.') : 'N/A') + '</li>' +
+      '<li><strong>Thời gian hoàn vốn (Payback):</strong> ' + (!isNaN(payback) ? payback.toFixed(2) + ' kỳ' : 'N/A') + '.</li>' +
+    '</ul>';
+    reco = '<ul>' +
+      '<li><strong>Quyết định đầu tư:</strong> Phê duyệt thực hiện dự án. Ưu tiên giải ngân theo các cột mốc bàn giao (Milestone payments).</li>' +
+    '</ul>';
   } else {
     badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (TỪ CHỐI ĐẦU TƯ)' : (currentLang === 'zh' ? '项目财务不可行 (建议拒绝)' : 'REJECT (UNVIABLE NPV)');
     badgeClass = 'badge-bad';
-    if (currentLang === 'vi') {
-      meaning = '<ul>' +
-        '<li><strong>NPV = ' + fv(npv) + ' &le; 0:</strong> Dòng tiền chiết khấu thu về không đủ bù đắp chi phí vốn đầu tư. Dự án gây thua lỗ tài chính.</li>' +
-      '</ul>';
-      reco = '<ul>' +
-        '<li><strong>Đàm phán cắt giảm vốn đầu tư ban đầu (CF0):</strong> Giảm chi phí ban đầu để chuyển NPV sang giá trị dương.</li>' +
-        '<li><strong>Đẩy nhanh dòng tiền:</strong> Tăng giá bán hoặc tăng sản lượng bán trong các năm đầu (front-loading revenues).</li>' +
-      '</ul>';
-    } else if (currentLang === 'zh') {
-      meaning = '<ul><li><strong>NPV &le; 0:</strong> 项目净现值为负，无法收回资本成本。</li></ul>';
-      reco = '<ul><li>建议削减初期资本开支 (CapEx) 或优化商业模式以增加早期现金流入。</li></ul>';
-    } else {
-      meaning = '<ul><li><strong>NPV &le; 0:</strong> Project destroys financial value and fails the cost of capital hurdle.</li></ul>';
-      reco = '<ul><li>Reduce upfront CapEx or front-load revenues to push NPV into positive territory.</li></ul>';
-    }
+    meaning = '<ul>' +
+      '<li><strong>NPV = ' + fv(npv) + ' &le; 0:</strong> Dòng tiền chiết khấu thu về không đủ bù đắp chi phí vốn đầu tư. Dự án gây thua lỗ tài chính.</li>' +
+    '</ul>';
+    reco = '<ul>' +
+      '<li><strong>Đàm phán cắt giảm vốn đầu tư ban đầu (CF0):</strong> Giảm chi phí ban đầu để chuyển NPV sang giá trị dương.</li>' +
+      '<li><strong>Đẩy nhanh dòng tiền:</strong> Tăng giá bán hoặc sản lượng bán trong các năm đầu.</li>' +
+    '</ul>';
   }
   h += renderAnalysisBox(badge, badgeClass, meaning, reco);
 
@@ -1540,6 +1561,352 @@ function npvCalc(cfs, r){
   for (var t = 0; t < cfs.length; t++) s += cfs[t] / Math.pow(1 + r, t);
   return s;
 }
+
+// --- RIVER.AI CONFIG & STORAGE ---
+function getRiverApiKey(){
+  return localStorage.getItem('river_api_key') || '';
+}
+function getRiverBaseUrl(){
+  return localStorage.getItem('river_base_url') || 'https://api.river.ai/v1';
+}
+function getRiverModel(){
+  return localStorage.getItem('river_model') || 'moonshotai/Kimi-K3';
+}
+function updateAiStatusIndicator(){
+  var key = getRiverApiKey();
+  var dot = document.getElementById('ai-status-dot');
+  if (dot) {
+    if (key && key.length > 5) {
+      dot.classList.add('active');
+      dot.title = 'River.ai Connected (' + getRiverModel() + ')';
+    } else {
+      dot.classList.remove('active');
+      dot.title = 'Chưa cấu hình API Key River.ai';
+    }
+  }
+  var lbl = document.getElementById('lbl-active-model');
+  if (lbl) lbl.innerText = getRiverModel();
+}
+
+function loadSettingsInputs(){
+  document.getElementById('river-api-key').value = getRiverApiKey();
+  document.getElementById('river-base-url').value = getRiverBaseUrl();
+  var model = getRiverModel();
+  var sel = document.getElementById('river-model-select');
+  var customIn = document.getElementById('river-model-custom');
+  var match = false;
+  for (var i = 0; i < sel.options.length; i++){
+    if (sel.options[i].value === model){
+      sel.selectedIndex = i;
+      match = true;
+      break;
+    }
+  }
+  if (!match){
+    sel.value = 'custom';
+    customIn.value = model;
+    customIn.style.display = 'block';
+  } else {
+    customIn.style.display = 'none';
+  }
+  document.getElementById('test-conn-result').innerHTML = '';
+}
+
+function onModelSelectChange(){
+  var sel = document.getElementById('river-model-select');
+  var customIn = document.getElementById('river-model-custom');
+  if (sel.value === 'custom'){
+    customIn.style.display = 'block';
+  } else {
+    customIn.style.display = 'none';
+  }
+}
+
+function toggleKeyVisibility(){
+  var inEl = document.getElementById('river-api-key');
+  inEl.type = inEl.type === 'password' ? 'text' : 'password';
+}
+
+function saveRiverSettings(){
+  var key = document.getElementById('river-api-key').value.trim();
+  var url = document.getElementById('river-base-url').value.trim() || 'https://api.river.ai/v1';
+  var sel = document.getElementById('river-model-select');
+  var model = sel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : sel.value;
+
+  localStorage.setItem('river_api_key', key);
+  localStorage.setItem('river_base_url', url);
+  localStorage.setItem('river_model', model);
+
+  updateAiStatusIndicator();
+  var resEl = document.getElementById('test-conn-result');
+  resEl.innerHTML = '<span style="color:#3fb950">✅ Đã lưu cấu hình thành công! Mô hình đang chọn: ' + model + '</span>';
+  setTimeout(function(){ closeModal('modal-ai-settings'); }, 1200);
+}
+
+async function testRiverConnection(){
+  var key = document.getElementById('river-api-key').value.trim();
+  var url = document.getElementById('river-base-url').value.trim() || 'https://api.river.ai/v1';
+  var sel = document.getElementById('river-model-select');
+  var model = sel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : sel.value;
+  var resEl = document.getElementById('test-conn-result');
+
+  if (!key){
+    resEl.innerHTML = '<span style="color:#f85149">❌ Vui lòng nhập API Key trước khi kiểm tra!</span>';
+    return;
+  }
+
+  resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kết nối tới ' + url + ' với model ' + model + '...</span>';
+  try {
+    var reply = await fetchRiverAI([{role: 'user', content: 'Reply with the exact word: CONNECTED'}], key, url, model);
+    resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối River.ai thành công! Phản hồi từ ' + model + ': <code>' + reply.slice(0, 50) + '</code></span>';
+  } catch(e) {
+    resEl.innerHTML = '<span style="color:#f85149">❌ Lỗi kết nối: ' + e.message + '</span>';
+  }
+}
+
+// --- RIVER.AI API CLIENT ---
+async function fetchRiverAI(messages, customKey, customUrl, customModel){
+  var key = customKey || getRiverApiKey();
+  if (!key){
+    throw new Error(currentLang === 'vi' ? 'Chưa cấu hình API Key. Vui lòng bấm Cài đặt API để nhập key.' : 'API Key not configured. Please open Settings.');
+  }
+  var url = (customUrl || getRiverBaseUrl()).replace(/\/+$/, '') + '/chat/completions';
+  var model = customModel || getRiverModel();
+
+  var payload = {
+    model: model,
+    messages: [
+      {
+        role: "system",
+        content: "Bạn là Chuyên gia Cố vấn Cao cấp về Quản lý Dự án PMP, Kế toán Quản trị, Thẩm định Tài chính Doanh nghiệp và Kiểm toán Số học.\n" +
+          "Nhiệm vụ của bạn là:\n" +
+          "1. Đối chiếu và kiểm tra tính toán: Đảm bảo các kết quả số học hoàn toàn chính xác theo chuẩn PMI PMP.\n" +
+          "2. Kiểm tra tính hợp lý của số liệu nhập: Phát hiện và cảnh báo các số liệu bất thường (ví dụ: suất chiết khấu quá cao, chỉ có chi phí mà thiếu dòng thu dương, thời lượng âm, quá tải nhân lực...).\n" +
+          "3. Giải thích ý nghĩa số học và kế toán quản trị: Tác động của các con số đến dòng tiền, thặng dư vốn, hiệu suất chi phí và rủi ro tiến độ.\n" +
+          "4. Đưa ra hướng cải tiến và giải pháp thực chiến tối ưu hóa dự án.\n" +
+          "Trả lời bằng định dạng Markdown rõ ràng, chuyên nghiệp, ngôn ngữ: " + (currentLang === 'vi' ? 'Tiếng Việt' : (currentLang === 'zh' ? '中文' : 'English')) + "."
+      },
+      ...messages
+    ],
+    temperature: 0.3
+  };
+
+  // Direct Browser Fetch
+  try {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      var data = await res.json();
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        return data.choices[0].message.content;
+      }
+    } else {
+      var errData = await res.json().catch(function(){ return {}; });
+      var msg = errData.error ? (errData.error.message || JSON.stringify(errData.error)) : ('HTTP ' + res.status + ': ' + res.statusText);
+      throw new Error(msg);
+    }
+  } catch (err) {
+    // If local dev server proxy is available
+    if (window.location.protocol.startsWith('http') && window.location.hostname === 'localhost') {
+      try {
+        var pRes = await fetch('/api/river/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + key,
+            'X-River-Base': customUrl || getRiverBaseUrl()
+          },
+          body: JSON.stringify(payload)
+        });
+        if (pRes.ok) {
+          var pData = await pRes.json();
+          if (pData.choices && pData.choices[0] && pData.choices[0].message) {
+            return pData.choices[0].message.content;
+          }
+        }
+      } catch (pErr) {}
+    }
+    throw err;
+  }
+}
+
+// --- AI CHAT INTERFACE LOGIC ---
+var aiChatHistory = [];
+
+function initAiChatWelcome(){
+  var container = document.getElementById('ai-chat-messages');
+  if (container.children.length === 0){
+    var welcome = currentLang === 'vi' ?
+      "👋 Chào bạn! Tôi là **Trợ lý AI PMP (Kimi-K3 / River.ai)**.\n\nTôi sẵn sàng hỗ trợ bạn:\n" +
+      "1. **Đối chiếu & kiểm tra tính chính xác** của số liệu tính toán.\n" +
+      "2. **Phát hiện dữ liệu bất thường** và gợi ý hiệu chỉnh cho người nhập liệu.\n" +
+      "3. **Phân tích ý nghĩa kế toán quản trị** & thẩm định tài chính (EVM, CPM, NPV, IRR, CoQ, Six Sigma...).\n" +
+      "4. **Đưa ra giải pháp tối ưu hóa** tiến độ và chi phí cho Project Manager.\n\n" +
+      "💡 *Bấm nút **[ 🤖 Tham vấn AI ]** trên bất kỳ Tab nào để gửi toàn bộ số liệu của Tab đó sang cho tôi kiểm tra ngay lập tức!*" :
+      "👋 Hello! I am your **PMP AI Financial & Technical Advisor (Kimi-K3 / River.ai)**.\n\nI can cross-check your project calculations, flag input anomalies, interpret financial & managerial accounting metrics, and advise on optimal project control strategies.\n\n💡 *Click **[ 🤖 AI Audit ]** on any tab to automatically send its inputs and outputs for an in-depth audit!*";
+    appendAiMessage('assistant', welcome);
+  }
+}
+
+function appendAiMessage(role, text){
+  var container = document.getElementById('ai-chat-messages');
+  var div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  var avatar = document.createElement('div');
+  avatar.className = 'ai-avatar';
+  avatar.innerText = role === 'user' ? '👤' : '🤖';
+  var bubble = document.createElement('div');
+  bubble.className = 'ai-bubble';
+  bubble.innerHTML = formatMarkdown(text);
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  scrollAiChatToBottom();
+  return bubble;
+}
+
+function formatMarkdown(text){
+  if (!text) return '';
+  var s = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  // Bold
+  s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Inline code
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Lists
+  s = s.replace(/^\s*[\*\-]\s+(.*)$/gm, '• $1');
+  return s;
+}
+
+function scrollAiChatToBottom(){
+  var c = document.getElementById('ai-chat-messages');
+  if (c) c.scrollTop = c.scrollHeight;
+}
+
+function clearAiChat(){
+  document.getElementById('ai-chat-messages').innerHTML = '';
+  aiChatHistory = [];
+  initAiChatWelcome();
+}
+
+function handleAiKeydown(e){
+  if (e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendAiMessage();
+  }
+}
+
+async function sendAiMessage(){
+  var inEl = document.getElementById('ai-user-input');
+  var text = inEl.value.trim();
+  if (!text) return;
+  inEl.value = '';
+
+  appendAiMessage('user', text);
+  aiChatHistory.push({role: 'user', content: text});
+
+  // Check key
+  if (!getRiverApiKey()){
+    appendAiMessage('assistant', currentLang === 'vi' ?
+      "⚠️ Bạn chưa cấu hình **River.ai API Key**.\n\nVui lòng bấm nút **[ ⚙️ Settings ]** ở góc trên cửa sổ này, nhập API Key từ console.river.ai và bấm **Lưu cấu hình** để kích hoạt mô hình moonshotai/Kimi-K3." :
+      "⚠️ **River.ai API Key** is not configured.\n\nPlease click **[ ⚙️ Settings ]** above, paste your API Key from console.river.ai, and click Save.");
+    return;
+  }
+
+  var loadingBubble = appendAiMessage('assistant', '⏳ ' + (currentLang === 'vi' ? 'Đang phân tích và đối chiếu với mô hình Kimi-K3...' : 'Analyzing and auditing with Kimi-K3...'));
+
+  try {
+    var response = await fetchRiverAI(aiChatHistory);
+    loadingBubble.innerHTML = formatMarkdown(response);
+    aiChatHistory.push({role: 'assistant', content: response});
+    scrollAiChatToBottom();
+  } catch(err) {
+    loadingBubble.innerHTML = '<span style="color:#f85149">❌ <strong>Lỗi kết nối River.ai:</strong> ' + err.message + '</span>';
+  }
+}
+
+// Quick AI prompts
+function quickAiPrompt(type){
+  var activePanel = document.querySelector('.tab-panel.active');
+  var tabNum = activePanel ? parseInt(activePanel.id.replace('tab-', ''), 10) : 1;
+  
+  if (type === 'audit'){
+    askAiAboutTab(tabNum);
+  } else if (type === 'accounting'){
+    var prompt = currentLang === 'vi' ?
+      "Hãy phân tích khía cạnh kế toán tài chính và quản trị của Tab hiện tại (EVM/CPM/Chi phí/Chất lượng/NPV), chỉ rõ tác động đến dòng tiền và ngân sách." :
+      "Provide a managerial and financial accounting analysis for this PMP domain, focusing on cash flow, balance sheet impact, and cost governance.";
+    document.getElementById('ai-user-input').value = prompt;
+    sendAiMessage();
+  } else if (type === 'optimize'){
+    var prompt = currentLang === 'vi' ?
+      "Đưa ra các giải pháp hành động cụ thể để tối ưu hóa tiến độ, cắt giảm chi phí và nâng cao hiệu suất theo chuẩn PMP cho dữ liệu hiện tại." :
+      "Provide actionable optimization recommendations to compress schedule, optimize costs, and enhance performance for the current dataset.";
+    document.getElementById('ai-user-input').value = prompt;
+    sendAiMessage();
+  } else if (type === 'exam'){
+    var prompt = currentLang === 'vi' ?
+      "Hãy cho tôi 2 câu hỏi tình huống thường gặp trong kỳ thi PMP liên quan trực tiếp đến các công thức và chỉ số ở Tab này, kèm đáp án và giải thích chi tiết." :
+      "Give me 2 typical PMP exam scenario questions related to this knowledge area and formulas, with answers and explanations.";
+    document.getElementById('ai-user-input').value = prompt;
+    sendAiMessage();
+  }
+}
+
+// 1-Click Tab Audit
+function askAiAboutTab(tabNum){
+  var panel = document.getElementById('tab-' + tabNum);
+  if (!panel) return;
+  
+  var title = panel.querySelector('h2') ? panel.querySelector('h2').innerText : ('Tab ' + tabNum);
+  var inputs = [];
+  panel.querySelectorAll('input').forEach(function(i){
+    var label = i.parentElement ? i.parentElement.innerText.replace(i.value, '').trim() : i.id;
+    var val = i.value !== '' ? i.value : '(chưa nhập)';
+    inputs.push(label + ': ' + val);
+  });
+
+  var outEl = document.getElementById('tab-' + tabNum + '-output');
+  var outputText = outEl ? outEl.innerText.trim() : '';
+
+  var prompt = '';
+  if (currentLang === 'vi') {
+    prompt = "📌 **YÊU CẦU ĐỐI CHIẾU & PHÂN TÍCH SỐ LIỆU TẠI " + title.toUpperCase() + "**\n\n" +
+      "**1. Dữ liệu đầu vào của người dùng:**\n" + inputs.map(function(s){ return "- " + s; }).join('\n') + "\n\n" +
+      "**2. Kết quả tính toán của hệ thống:**\n" + (outputText ? outputText : "(Chưa bấm tính toán)") + "\n\n" +
+      "**Yêu cầu chuyên gia:**\n" +
+      "- Kiểm tra tính chuẩn xác của các phép tính số học theo công thức PMP.\n" +
+      "- Chỉ ra các số liệu bất thường hoặc sai sót logic người dùng cần lưu ý (ví dụ: suất chiết khấu quá cao, thiếu dòng thu, thời lượng âm...).\n" +
+      "- Phân tích ý nghĩa kế toán tài chính và quản trị của các chỉ số này.\n" +
+      "- Đưa ra đề xuất cải tiến và tối ưu hóa cụ thể cho Project Manager.";
+  } else {
+    prompt = "📌 **PMP CALCULATION AUDIT & FINANCIAL CONSULTATION: " + title.toUpperCase() + "**\n\n" +
+      "**1. User Inputs:**\n" + inputs.map(function(s){ return "- " + s; }).join('\n') + "\n\n" +
+      "**2. System Calculated Outputs:**\n" + (outputText ? outputText : "(Not computed yet)") + "\n\n" +
+      "**Expert Instructions:**\n" +
+      "- Verify arithmetic correctness against PMP standards.\n" +
+      "- Flag any data anomalies or illogical inputs (e.g. extreme rates, negative durations, missing inflows).\n" +
+      "- Provide managerial & financial accounting interpretations.\n" +
+      "- Give concrete optimization actions for the Project Manager.";
+  }
+
+  openModal('modal-ai-chat');
+  document.getElementById('ai-user-input').value = prompt;
+  sendAiMessage();
+}
+
+// On Page Load
+window.addEventListener('DOMContentLoaded', function(){
+  updateAiStatusIndicator();
+});
 </script>
 </body>
 </html>

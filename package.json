@@ -1,10 +1,10 @@
 {
   "name": "pmp-calculator-2026",
-  "version": "1.0.0",
-  "description": "PMP Formula Calculator - Interactive Project Management Professional Formula Suite with 3-language support, CPM network diagrams, EVM, Six Sigma, and financial appraisal.",
+  "version": "1.1.0",
+  "description": "PMP Formula Calculator & AI Advisor (Kimi-K3 via River.ai) - Interactive PMP suite with 3-language support, CPM network diagrams, EVM, Six Sigma, and financial appraisal.",
   "main": "index.html",
   "scripts": {
-    "start": "node -e \"const http=require('http'),fs=require('fs'),path=require('path');const port=process.env.PORT||3000;http.createServer((req,res)=>{let f=req.url==='/'?'index.html':req.url.slice(1);let p=path.join(__dirname,f);if(fs.existsSync(p)){res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});res.end(fs.readFileSync(p))}else{res.writeHead(404);res.end('Not found')}}).listen(port,()=>console.log('Server running at http://localhost:'+port))\"",
+    "start": "node server.js",
     "test": "node run_validate.js"
   },
   "keywords": [
@@ -12,6 +12,8 @@
     "pmi",
     "calculator",
     "project-management",
+    "kimi-k3",
+    "river-ai",
     "evm",
     "cpm",
     "six-sigma",

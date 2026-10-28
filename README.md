@@ -26,6 +26,15 @@ Bạn có thể chạy ứng dụng theo 2 cách:
 
 ## 2. Quy Tắc Giao Diện & Tính Năng Mới
 
+* **Đấu nối Trợ lý AI Thông minh (Kimi-K3 via River.ai):**
+  * Tích hợp trực tiếp model **`moonshotai/Kimi-K3`** (hoặc DeepSeek-V4.1-Flash, Qwen3.8-27B) từ nền tảng River.ai.
+  * **Nút bấm `[ 🤖 Trợ lý AI ]` trên thanh điều hướng:** Mở cửa sổ chat chuyên sâu, cho phép hỏi đáp tự do mọi vấn đề về PMP, kế toán quản trị và tài chính dự án.
+  * **Nút bấm `[ 🤖 Tham vấn AI ]` trên mỗi Tab:** 1-Click tự động trích xuất toàn bộ dữ liệu nhập và kết quả tính toán gửi đến Kimi-K3 để:
+    * Đối chiếu và kiểm tra tính toán số học chuẩn xác.
+    * Phát hiện dữ liệu bất thường hoặc sai sót logic người dùng cần lưu ý.
+    * Phân tích ý nghĩa kế toán tài chính và tác động dòng tiền.
+    * Đưa ra giải pháp hành động cụ thể cho Project Manager.
+  * **Cài đặt API an toàn:** Bấm nút **`[ ⚙️ River.ai ]`** để nhập API Key (lấy từ [console.river.ai/inference](https://console.river.ai/inference)). Key được lưu an toàn trong trình duyệt (`localStorage`), không bao giờ bị lưu vào mã nguồn hay commit lên GitHub.
 * **Đa ngôn ngữ (English / Tiếng Việt / 中文):**
   * Chuyển đổi linh hoạt 3 ngôn ngữ ngay trên thanh tiêu đề qua 3 nút: **`[ EN ]`**, **`[ Tiếng Việt ]`**, **`[ 中文 ]`**.
   * Chuyển đổi tự động toàn bộ tiêu đề, nhãn bảng, nút bấm, hướng dẫn và mô tả mà không làm gián đoạn dữ liệu đang nhập hay định dạng kiểm thử.
