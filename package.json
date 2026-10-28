@@ -1,0 +1,28 @@
+{
+  "name": "pmp-calculator-2026",
+  "version": "1.0.0",
+  "description": "PMP Formula Calculator - Interactive Project Management Professional Formula Suite with 3-language support, CPM network diagrams, EVM, Six Sigma, and financial appraisal.",
+  "main": "index.html",
+  "scripts": {
+    "start": "node -e \"const http=require('http'),fs=require('fs'),path=require('path');const port=process.env.PORT||3000;http.createServer((req,res)=>{let f=req.url==='/'?'index.html':req.url.slice(1);let p=path.join(__dirname,f);if(fs.existsSync(p)){res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});res.end(fs.readFileSync(p))}else{res.writeHead(404);res.end('Not found')}}).listen(port,()=>console.log('Server running at http://localhost:'+port))\"",
+    "test": "node run_validate.js"
+  },
+  "keywords": [
+    "pmp",
+    "pmi",
+    "calculator",
+    "project-management",
+    "evm",
+    "cpm",
+    "six-sigma",
+    "pert",
+    "npv",
+    "irr",
+    "mindmap"
+  ],
+  "author": "mrbit4578",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
