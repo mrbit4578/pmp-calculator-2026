@@ -48,6 +48,22 @@ table.ref-table th,table.ref-table td{border:1px solid #30363d;padding:8px 10px;
 table.ref-table th{background:#21262d;color:#58a6ff}
 .cpm-row{margin-bottom:8px;display:flex;gap:8px;align-items:center}
 
+/* Analysis Box Styles */
+.analysis-box{margin-top:14px;padding:12px 14px;background:#161b22;border:1px solid #30363d;border-radius:8px;font-family:inherit;white-space:normal;line-height:1.5}
+.analysis-header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #21262d}
+.analysis-title{font-weight:bold;color:#58a6ff;font-size:12px;letter-spacing:0.5px}
+.analysis-verdict-badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;letter-spacing:0.5px}
+.badge-good{background:rgba(46,160,67,0.2);color:#3fb950;border:1px solid #2ea043}
+.badge-warn{background:rgba(210,153,34,0.2);color:#d29922;border:1px solid #d29922}
+.badge-bad{background:rgba(248,81,73,0.2);color:#f85149;border:1px solid #f85149}
+.badge-info{background:rgba(88,166,255,0.2);color:#58a6ff;border:1px solid #58a6ff}
+.analysis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.analysis-col{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:10px 12px}
+.analysis-section-title{font-size:12px;font-weight:bold;color:#58a6ff;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.analysis-text{font-size:12px;color:#c9d1d9;line-height:1.6}
+.analysis-text ul{padding-left:18px;margin-top:4px}
+.analysis-text li{margin-bottom:4px}
+
 /* Modal styles */
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
@@ -769,6 +785,17 @@ function setLanguage(lang) {
     if (titleEl && dict['t' + i + 'Title']) titleEl.innerText = dict['t' + i + 'Title'];
     if (descEl && dict['t' + i + 'Desc']) descEl.innerText = dict['t' + i + 'Desc'];
   }
+
+  // Re-run active tab calculation if there is existing output
+  var activePanel = document.querySelector('.tab-panel.active');
+  if (activePanel) {
+    var tabNum = parseInt(activePanel.id.replace('tab-', ''), 10);
+    var outEl = document.getElementById('tab-' + tabNum + '-output');
+    if (outEl && outEl.innerHTML.trim() !== '') {
+      var fns = [null, computeEVM, computeCPM, computeCost, computeQuality, computeRisk, computeProcurement, computeStakeholder, computeComm, computeBenefit, computePERT, computeFinance];
+      if (fns[tabNum]) fns[tabNum]();
+    }
+  }
 }
 
 // --- MODAL CONTROLS ---
@@ -834,6 +861,32 @@ function rls(tag, name, val){
   return '<div data-tag="' + tag + '">' + name + ' = ' + val + '</div>';
 }
 
+// --- SHARED ANALYSIS BOX RENDERER ---
+function renderAnalysisBox(badgeText, badgeClass, meaningHtml, recoHtml) {
+  var headers = {
+    en: { head: "TECHNICAL & FINANCIAL ANALYSIS", meaning: "Metric Meaning & Business Significance", reco: "Verdict & Actionable Optimization Guidance" },
+    vi: { head: "PHÂN TÍCH KỸ THUẬT & TÀI CHÍNH", meaning: "Ý Nghĩa Thông Số Kỹ Thuật & Tài Chính", reco: "Kết Luận & Hướng Cải Tiến Tối Ưu Hóa" },
+    zh: { head: "技术与财务深度分析", meaning: "指标业务与财务含义解读", reco: "综合结论与优化改进方案" }
+  };
+  var h = headers[currentLang] || headers.en;
+  return '<div class="analysis-box">' +
+    '<div class="analysis-header">' +
+      '<span class="analysis-verdict-badge ' + badgeClass + '">' + badgeText + '</span>' +
+      '<span class="analysis-title">' + h.head + '</span>' +
+    '</div>' +
+    '<div class="analysis-grid">' +
+      '<div class="analysis-col">' +
+        '<div class="analysis-section-title">🔍 ' + h.meaning + '</div>' +
+        '<div class="analysis-text">' + meaningHtml + '</div>' +
+      '</div>' +
+      '<div class="analysis-col">' +
+        '<div class="analysis-section-title">💡 ' + h.reco + '</div>' +
+        '<div class="analysis-text">' + recoHtml + '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
 // --- TAB 1: EVM ---
 function computeEVM(){
   var ev = gv('evm-ev'), ac = gv('evm-ac'), pv = gv('evm-pv'), bac = gv('evm-bac');
@@ -853,6 +906,64 @@ function computeEVM(){
   h += rl('VAC', 'VAC', 'BAC - EAC', vac);
   h += rl('TCPI_BAC', 'TCPI_BAC', '(BAC - EV) / (BAC - AC)', tcpi_bac);
   h += rl('TCPI_EAC', 'TCPI_EAC', '(BAC - EV) / (EAC - AC)', tcpi_eac);
+
+  // Analysis
+  if (!isNaN(cpi) && !isNaN(spi)){
+    var badge = '', badgeClass = 'badge-good';
+    var meaning = '', reco = '';
+    var isCostOk = cpi >= 1, isSchedOk = spi >= 1;
+    
+    if (isCostOk && isSchedOk) {
+      badge = currentLang === 'vi' ? 'DỰ ÁN HIỆU QUẢ CAO' : (currentLang === 'zh' ? '项目表现极佳' : 'HEALTHY PROJECT');
+      badgeClass = 'badge-good';
+    } else if (!isCostOk && !isSchedOk) {
+      badge = currentLang === 'vi' ? 'CẢNH BÁO NGUY CƠ CAO' : (currentLang === 'zh' ? '严重风险预警' : 'CRITICAL RISK');
+      badgeClass = 'badge-bad';
+    } else {
+      badge = currentLang === 'vi' ? 'CẢNH BÁO MỘT PHẦN' : (currentLang === 'zh' ? '部分指标预警' : 'WARNING');
+      badgeClass = 'badge-warn';
+    }
+
+    if (currentLang === 'vi') {
+      meaning = '<ul>' +
+        '<li><strong>Chi phí (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Tiết kiệm. Mỗi 1$ chi ra tạo được ' + cpi.toFixed(2) + '$ giá trị hoàn thành.' : 'Bội chi. Mỗi 1$ chi ra chỉ đem lại ' + cpi.toFixed(2) + '$ giá trị (lỗ ' + ((1-cpi)*100).toFixed(1) + '%).') + '</li>' +
+        '<li><strong>Tiến độ (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Vượt hoặc đúng tiến độ kế hoạch.' : 'Chậm tiến độ (khối lượng đạt ' + (spi*100).toFixed(1) + '% so với kế hoạch).') + '</li>' +
+        '<li><strong>Dự báo hoàn thành (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (Chênh lệch VAC: ' + (!isNaN(vac) ? (vac>=0?'+':'')+fv(vac) : 'N/A') + ').</li>' +
+        '<li><strong>Hiệu suất cần đạt (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ Vượt ngưỡng 1.2 (ngân sách BAC ban đầu là phi thực tế).' : ' (Trong giới hạn kiểm soát).') + '</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        (!isCostOk ? '<li><strong>Cải tiến chi phí:</strong> Rà soát Value Engineering, loại bỏ tính năng ngoài phạm vi (Gold plating), siết định mức chi tiêu.</li>' : '<li><strong>Duy trì chi phí:</strong> Tiếp tục kiểm soát chặt chẽ các hợp đồng mua sắm thầu phụ.</li>') +
+        (!isSchedOk ? '<li><strong>Đẩy nhanh tiến độ:</strong> Thực hiện Fast-tracking (chạy song song công việc) hoặc Crashing (bổ sung nhân lực vào đường găng).</li>' : '<li><strong>Tiến độ:</strong> Duy trì nhịp độ hiện tại, giải phóng bớt tài nguyên cho giai đoạn tiếp theo.</li>') +
+        (tcpi_bac > 1.2 ? '<li><strong>Điều chỉnh ngân sách:</strong> Đệ trình ngay Change Request lên Sponsor để duyệt lại ngân sách mới theo EAC.</li>' : '') +
+      '</ul>';
+    } else if (currentLang === 'zh') {
+      meaning = '<ul>' +
+        '<li><strong>成本绩效 (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? '成本节约，每支出1元产生 ' + cpi.toFixed(2) + ' 元价值。' : '成本超支，每支出1元仅获得 ' + cpi.toFixed(2) + ' 元价值。') + '</li>' +
+        '<li><strong>进度绩效 (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? '进度超前或符合计划。' : '进度落后，仅完成计划的 ' + (spi*100).toFixed(1) + '%。') + '</li>' +
+        '<li><strong>完工估算 (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (完工偏差 VAC: ' + (!isNaN(vac) ? fv(vac) : 'N/A') + ')。</li>' +
+        '<li><strong>未来绩效指数 (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ 超过1.2，原预算BAC已不切实际。' : ' (可实现范围)。') + '</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        (!isCostOk ? '<li><strong>成本优化:</strong> 开展价值工程分析，削减非关键范围，严格把控直接成本。</li>' : '') +
+        (!isSchedOk ? '<li><strong>进度优化:</strong> 采用快速跟进 (Fast-tracking) 或赶工 (Crashing) 策略压缩关键路径。</li>' : '') +
+        (tcpi_bac > 1.2 ? '<li><strong>基准变更:</strong> 向项目发起人申请调整成本基准，以新的 EAC 作为目标。</li>' : '') +
+      '</ul>';
+    } else {
+      meaning = '<ul>' +
+        '<li><strong>Cost Performance (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Cost efficient: $1 spent produces $' + cpi.toFixed(2) + ' value.' : 'Over budget: $1 spent only yields $' + cpi.toFixed(2) + ' value.') + '</li>' +
+        '<li><strong>Schedule Performance (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Ahead of or on schedule.' : 'Behind schedule (progressing at ' + (spi*100).toFixed(1) + '% of planned speed).') + '</li>' +
+        '<li><strong>Forecast at Completion (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (Variance VAC: ' + (!isNaN(vac) ? fv(vac) : 'N/A') + ').</li>' +
+        '<li><strong>To-Complete Index (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ Exceeds 1.2 hurdle; original BAC is unrealistic.' : ' (Manageable).') + '</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        (!isCostOk ? '<li><strong>Cost Action:</strong> Apply Value Engineering, eliminate scope creep (gold plating), renegotiate vendor rates.</li>' : '') +
+        (!isSchedOk ? '<li><strong>Schedule Action:</strong> Fast-track parallel tasks or crash critical path activities with low cost slopes.</li>' : '') +
+        (tcpi_bac > 1.2 ? '<li><strong>Re-baseline:</strong> Submit formal Change Request to Sponsor to approve updated EAC baseline.</li>' : '') +
+      '</ul>';
+    }
+    h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+  }
+
   document.getElementById('tab-1-output').innerHTML = h;
 }
 
@@ -954,6 +1065,42 @@ function computeCPM(){
   h += '</table>';
   h += '<div data-tag="dur">dur = ' + projDur.toFixed(4) + '</div>';
   h += '<div data-tag="path">path = ' + bestPath.join('->') + '</div>';
+
+  // Analysis
+  var badge = currentLang === 'vi' ? 'ĐƯỜNG GĂNG (CRITICAL PATH)' : (currentLang === 'zh' ? '关键路径分析' : 'CRITICAL PATH IDENTIFIED');
+  var meaning = '', reco = '';
+  if (currentLang === 'vi') {
+    meaning = '<ul>' +
+      '<li><strong>Tổng thời gian dự án:</strong> ' + projDur.toFixed(2) + ' ngày/kỳ.</li>' +
+      '<li><strong>Đường găng:</strong> <code>' + bestPath.join(' &rarr; ') + '</code>. Các hoạt động này có Total Float = 0 (trễ 1 ngày sẽ làm lùi ngày hoàn thành toàn dự án 1 ngày).</li>' +
+      '<li><strong>Dự trữ thời gian (Float):</strong> Các hoạt động ngoài đường găng có thể linh hoạt điều phối nhân lực.</li>' +
+    '</ul>';
+    reco = '<ul>' +
+      '<li><strong>Bảo vệ đường găng:</strong> Ưu tiên nguồn lực chất lượng cao nhất cho các hoạt động: ' + bestPath.join(', ') + '.</li>' +
+      '<li><strong>Rút ngắn tiến độ (Schedule Crashing):</strong> Nếu cần hoàn thành sớm hơn ' + projDur.toFixed(1) + ' ngày, chỉ bổ sung nhân lực cho hoạt động thuộc đường găng có chi phí gia tốc thấp nhất.</li>' +
+      '<li><strong>Cân bằng tài nguyên (Resource Leveling):</strong> Điều chuyển nhân sự từ hoạt động có Total Float cao sang hỗ trợ đường găng.</li>' +
+    '</ul>';
+  } else if (currentLang === 'zh') {
+    meaning = '<ul>' +
+      '<li><strong>项目总工期:</strong> ' + projDur.toFixed(2) + ' 个周期。</li>' +
+      '<li><strong>关键路径:</strong> <code>' + bestPath.join(' &rarr; ') + '</code> (总浮动时间 TF = 0，不可产生任何延误)。</li>' +
+    '</ul>';
+    reco = '<ul>' +
+      '<li><strong>保护关键路径:</strong> 确保关键活动资源充足，避免关键路径发生瓶颈。</li>' +
+      '<li><strong>工期压缩:</strong> 仅针对关键路径上的低成本斜率活动进行赶工或快速跟进。</li>' +
+    '</ul>';
+  } else {
+    meaning = '<ul>' +
+      '<li><strong>Total Project Duration:</strong> ' + projDur.toFixed(2) + ' time units.</li>' +
+      '<li><strong>Critical Path:</strong> <code>' + bestPath.join(' &rarr; ') + '</code> (Total Float = 0, zero delay tolerance).</li>' +
+    '</ul>';
+    reco = '<ul>' +
+      '<li><strong>Critical Path Protection:</strong> Prioritize top resources for critical activities: ' + bestPath.join(', ') + '.</li>' +
+      '<li><strong>Schedule Compression:</strong> Crash only critical path activities with the lowest cost slopes.</li>' +
+    '</ul>';
+  }
+  h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
+
   document.getElementById('tab-2-output').innerHTML = h;
 }
 
@@ -970,6 +1117,22 @@ function computeCost(){
   h += rl('EAC', 'EAC', 'BAC / CPI', eac);
   h += rl('TCPI', 'TCPI', '(BAC - EV) / (BAC - AC)', tcpi);
   h += rl('RU%', 'RU%', '(Used / Avail) * 100', ru);
+
+  if (!isNaN(bv) || !isNaN(ru)){
+    var badge = (bv >= 0 && ru <= 90 && ru >= 65) ? (currentLang === 'vi' ? 'NGÂN SÁCH & TÀI NGUYÊN TỐI ƯU' : 'OPTIMAL COST & RESOURCE') : (currentLang === 'vi' ? 'CẦN CÂN ĐỐI TÀI NGUYÊN' : 'REBALANCE NEEDED');
+    var badgeClass = (bv >= 0 && ru <= 90 && ru >= 65) ? 'badge-good' : 'badge-warn';
+    var meaning = '<ul>' +
+      '<li><strong>Chênh lệch ngân sách (BV = ' + fv(bv) + '):</strong> ' + (bv >= 0 ? 'Dư tiền mặt so với ngân sách.' : 'Đã chi vượt hạn mức ngân sách.') + '</li>' +
+      '<li><strong>Tỷ lệ sử dụng tài nguyên (RU% = ' + fv(ru) + '%):</strong> ' + (ru > 90 ? '⚠️ Quá tải (rủi ro kiệt sức và phát sinh lỗi).' : (ru < 65 ? 'Dưới mức khai thác (lãng phí nguồn lực).' : 'Trong ngưỡng lý tưởng (70-85%).')) + '</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (ru > 90 ? '<li><strong>Giảm tải:</strong> Điều hòa tài nguyên (Resource Leveling) và bổ sung nhân sự dự phòng.</li>' : '') +
+      (ru < 65 ? '<li><strong>Tối ưu năng suất:</strong> Tái phân bổ nhân sự sang các công việc đường găng để tăng tốc độ bàn giao.</li>' : '') +
+      (bv < 0 ? '<li><strong>Kiểm soát ngân sách:</strong> Siết chặt quy trình phê duyệt chi phí mua ngoài.</li>' : '') +
+    '</ul>';
+    h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+  }
+
   document.getElementById('tab-3-output').innerHTML = h;
 }
 
@@ -985,6 +1148,22 @@ function computeQuality(){
   h += rl('DPMO', 'DPMO', '(Def / (Units * Opps)) * 1e6', dpmo);
   h += rl('Yield%', 'Yield%', '(Good / Total) * 100', yld);
   h += rl('CoQ', 'CoQ', 'Prev + Appr + Int + Ext', coq);
+
+  if (!isNaN(dpmo) || !isNaN(coq)){
+    var is6Sigma = dpmo <= 3.4;
+    var badge = is6Sigma ? (currentLang === 'vi' ? 'ĐẲNG CẤP SIX SIGMA (6σ)' : 'SIX SIGMA EXCELLENCE') : (currentLang === 'vi' ? 'CẦN CẢI TIẾN CHẤT LƯỢNG' : 'QUALITY IMPROVEMENT NEEDED');
+    var badgeClass = is6Sigma ? 'badge-good' : (dpmo <= 6210 ? 'badge-warn' : 'badge-bad');
+    var meaning = '<ul>' +
+      '<li><strong>DPMO (' + fv(dpmo) + '):</strong> ' + (is6Sigma ? 'Đạt chuẩn 6 Sigma (99.99966% không lỗi).' : (dpmo <= 6210 ? 'Chuẩn công nghiệp thông thường (4-5 Sigma).' : 'Tỷ lệ lỗi cao (dưới 4 Sigma).')) + '</li>' +
+      '<li><strong>Chi phí chất lượng (CoQ = ' + fv(coq) + '):</strong> Chi phí tuân thủ (Phòng ngừa + Đánh giá: ' + fv(prev+appr) + ') vs Chi phí sai sót (Nội bộ + Bên ngoài: ' + fv(intF+extF) + ').</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      '<li><strong>Chiến lược chất lượng:</strong> Đầu tư ngân sách vào Chi phí Phòng ngừa (đào tạo, checklist, tự động hóa kiểm thử) để triệt tiêu Chi phí Thất thoát bên ngoài (bồi thường, bảo hành, mất uy tín).</li>' +
+      '<li><strong>Loại bỏ lãng phí:</strong> Áp dụng Lean / Kaizen để tìm nguyên nhân gốc rễ (Root Cause Analysis - 5 Whys).</li>' +
+    '</ul>';
+    h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+  }
+
   document.getElementById('tab-4-output').innerHTML = h;
 }
 
@@ -1019,6 +1198,22 @@ function computeRisk(){
   h += rl('EMV', 'EMV', 'sum(Prob * Impact)', emv);
   h += rl('RPN', 'RPN', 'Sev * Occ * Det', rpn);
   h += rl('DT_EV', 'DT_EV', 'sum(Prob * Payoff)', dtev);
+
+  if (!isNaN(rpn) || !isNaN(emv)){
+    var isHighRisk = rpn >= 150 || sev >= 8;
+    var badge = isHighRisk ? (currentLang === 'vi' ? 'RỦI RO MỨC ĐỎ (ƯU TIÊN ỨNG PHÓ)' : 'HIGH RISK PRIORITY') : (currentLang === 'vi' ? 'RỦI RO TRONG TẦM KIỂM SOÁT' : 'CONTROLLED RISK');
+    var badgeClass = isHighRisk ? 'badge-bad' : 'badge-good';
+    var meaning = '<ul>' +
+      '<li><strong>Giá trị tiền tệ kỳ vọng (EMV = ' + fv(emv) + '):</strong> Giá trị tổn thất/lợi nhuận kỳ vọng thống kê. Dùng để dự trù Quỹ dự phòng rủi ro (Contingency Reserve).</li>' +
+      '<li><strong>Chỉ số ưu tiên rủi ro (RPN = ' + fv(rpn) + '):</strong> ' + (isHighRisk ? '⚠️ Mức rủi ro cao hoặc mức độ nghiêm trọng lớn (Sev >= 8).' : 'Mức độ rủi ro trung bình / thấp.') + '</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (isHighRisk ? '<li><strong>Phương án ứng phó khẩn cấp:</strong> Áp dụng chiến lược Giảm thiểu (Mitigate) hoặc Chuyển giao rủi ro (Transfer qua bảo hiểm/hợp đồng phụ).</li>' : '') +
+      '<li><strong>Trích lập dự phòng:</strong> Đưa đúng giá trị EMV vào ngân sách dự phòng rủi ro đã xác định (Contingency Reserve).</li>' +
+    '</ul>';
+    h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+  }
+
   document.getElementById('tab-5-output').innerHTML = h;
 }
 
@@ -1037,6 +1232,21 @@ function computeProcurement(){
   h += rl('BUY', 'BUY', 'Price', buy);
   h += rls('Decision', 'Decision', decision);
   h += rl('SPI', 'SPI', 'Delivered / Committed', spi);
+
+  if (decision === 'MAKE' || decision === 'BUY'){
+    var badge = currentLang === 'vi' ? ('QUYẾT ĐỊNH: ' + (decision==='MAKE'?'TỰ LÀM (MAKE)':'MUA NGOÀI (BUY)')) : ('DECISION: ' + decision);
+    var meaning = '<ul>' +
+      '<li><strong>Tổng chi phí sở hữu (TCO = ' + fv(tco) + '):</strong> Đã tính cả chi phí vận hành bảo trì trong ' + (isNaN(yrs)?'0':yrs) + ' năm.</li>' +
+      '<li><strong>So sánh phương án:</strong> Chi phí tự sản xuất = ' + fv(make) + ' vs Mua ngoài = ' + fv(buy) + ' (Tiết kiệm được: ' + fv(Math.abs(make - buy)) + ').</li>' +
+      '<li><strong>Hiệu suất nhà thầu (SPI = ' + fv(spi) + '):</strong> ' + (spi < 0.95 ? '⚠️ Nhà cung cấp giao hàng chậm so với cam kết.' : 'Nhà cung cấp đáp ứng tốt cam kết hợp đồng.') + '</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (decision === 'MAKE' ? '<li><strong>Thực thi Make:</strong> Đảm bảo năng lực kỹ thuật nội bộ và kiểm soát chi phí cố định.</li>' : '<li><strong>Thực thi Buy:</strong> Ký kết hợp đồng bảo lãnh chất lượng và cam kết SLA chi tiết.</li>') +
+      (spi < 0.95 ? '<li><strong>Xử lý nhà thầu:</strong> Kích hoạt điều khoản phạt hợp đồng và yêu cầu kế hoạch khắc phục tiến độ (Recovery Plan).</li>' : '') +
+    '</ul>';
+    h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
+  }
+
   document.getElementById('tab-6-output').innerHTML = h;
 }
 
@@ -1051,6 +1261,22 @@ function computeStakeholder(){
   h += rls('quadrant', 'quadrant', quad);
   h += rl('SII', 'SII', 'Influence * Interest', sii);
   h += rl('EI', 'EI', 'Impact * Engagement', ei);
+
+  if (quad.indexOf('?') === -1){
+    var badge = (currentLang === 'vi' ? 'MA TRẬN QUYỀN LỰC: ' : 'STAKEHOLDER QUADRANT: ') + quad;
+    var meaning = '<ul>' +
+      '<li><strong>Vị trí phân loại:</strong> ' + (quad === 'High/High' ? 'Quyền lực cao / Mối quan tâm cao (Bên liên quan then chốt).' : (quad === 'High/Low' ? 'Quyền lực cao / Quan tâm thấp.' : (quad === 'Low/High' ? 'Quan tâm cao / Quyền lực thấp.' : 'Quan tâm thấp / Quyền lực thấp.'))) + '</li>' +
+      '<li><strong>Chỉ số quan trọng (SII = ' + fv(sii) + ') & Cam kết (EI = ' + fv(ei) + ').</strong></li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (quad === 'High/High' ? '<li><strong>Chiến lược Manage Closely:</strong> Tham vấn ý kiến định kỳ, ưu tiên phản hồi và báo cáo tiến độ trực tiếp.</li>' : '') +
+      (quad === 'High/Low' ? '<li><strong>Chiến lược Keep Satisfied:</strong> Cung cấp thông tin súc tích, giữ thái độ ủng hộ để tránh rủi ro phủ quyết dự án.</li>' : '') +
+      (quad === 'Low/High' ? '<li><strong>Chiến lược Keep Informed:</strong> Tận dụng sự ủng hộ nhiệt tình của họ như những đại sứ dự án.</li>' : '') +
+      (quad === 'Low/Low' ? '<li><strong>Chiến lược Monitor:</strong> Theo dõi định kỳ, tránh làm quá tải truyền thông.</li>' : '') +
+    '</ul>';
+    h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
+  }
+
   document.getElementById('tab-7-output').innerHTML = h;
 }
 
@@ -1064,6 +1290,22 @@ function computeComm(){
   h += rl('Eff', 'Eff', 'Clarity * Feedback', eff);
   h += rl('Effi', 'Effi', 'Processed / Sent', effi);
   h += rl('OI', 'OI', 'Sent / Processed', oi);
+
+  if (!isNaN(ch)){
+    var isOverload = n > 12 || oi > 1.2;
+    var badge = isOverload ? (currentLang === 'vi' ? 'CẢNH BÁO QUÁ TẢI TRUYỀN THÔNG' : 'COMMUNICATION OVERLOAD') : (currentLang === 'vi' ? 'GIAO TIẾP HIỆU QUẢ' : 'HEALTHY COMMUNICATION');
+    var badgeClass = isOverload ? 'badge-warn' : 'badge-good';
+    var meaning = '<ul>' +
+      '<li><strong>Kênh giao tiếp (CH = ' + fv(ch) + '):</strong> Với ' + n + ' thành viên, có tới ' + fv(ch) + ' kênh liên lạc chéo. Số kênh tăng theo cấp số nhân O(N^2).</li>' +
+      '<li><strong>Chỉ số quá tải (OI = ' + fv(oi) + '):</strong> ' + (oi > 1.2 ? 'Lượng thông tin gửi đi vượt quá khả năng tiếp nhận xử lý.' : 'Thông tin được xử lý kịp thời.') + '</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (n > 10 ? '<li><strong>Tái cấu trúc đội ngũ:</strong> Chia nhóm lớn thành các sub-team (Quy tắc 2-Pizza team: 5-8 người) với 1 đầu mối liên lạc (SPOC) để giảm kênh truyền thông.</li>' : '') +
+      '<li><strong>Tập trung hóa thông tin:</strong> Sử dụng Project Dashboard, Kanban board thay vì gửi chuỗi email tràn lan.</li>' +
+    '</ul>';
+    h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+  }
+
   document.getElementById('tab-8-output').innerHTML = h;
 }
 
@@ -1096,6 +1338,22 @@ function computeBenefit(){
   h += rl('BCR', 'BCR', 'SumCF / Init', bcr);
   h += rl('Payback', 'Payback', 'Linear Interpolation', payback);
   h += rl('NPV', 'NPV', '-Init + sum(CF_t / (1+r)^t)', npv);
+
+  if (!isNaN(npv) && !isNaN(bcr)){
+    var isGood = npv > 0 && bcr > 1;
+    var badge = isGood ? (currentLang === 'vi' ? 'DỰ ÁN CÓ HIỆU QUẢ KINH DOANH CAO' : 'COMMERCIALLY VIABLE') : (currentLang === 'vi' ? 'DỰ ÁN KHÔNG ĐỦ HIỆU QUẢ' : 'UNVIABLE BENEFIT');
+    var badgeClass = isGood ? 'badge-good' : 'badge-bad';
+    var meaning = '<ul>' +
+      '<li><strong>Tỷ số lợi ích/chi phí (BCR = ' + fv(bcr) + '):</strong> ' + (bcr > 1 ? 'Mỗi 1$ đầu tư tạo ra ' + fv(bcr) + '$ lợi ích tổng thể.' : 'Lợi ích không đủ bù đắp vốn bỏ ra.') + '</li>' +
+      '<li><strong>ROI (' + fv(roi) + '%):</strong> Tỷ suất sinh lời trên vốn đầu tư.</li>' +
+      '<li><strong>Thời gian hoàn vốn:</strong> ' + fv(payback) + ' kỳ. Hoàn vốn càng sớm thì rủi ro thanh khoản càng thấp.</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      (isGood ? '<li><strong>Thực thi:</strong> Đề xuất thông qua Business Case và phê duyệt Project Charter.</li>' : '<li><strong>Tối ưu hóa:</strong> Front-load doanh thu (đẩy sớm thời điểm thu tiền) để rút ngắn Payback và tăng NPV.</li>') +
+    '</ul>';
+    h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+  }
+
   document.getElementById('tab-9-output').innerHTML = h;
 }
 
@@ -1112,6 +1370,27 @@ function computePERT(){
   h += rl('BetaVar', 'BetaVar', 'BetaSD ^ 2', bVar);
   h += rl('TriMean', 'TriMean', '(O + M + P) / 3', tMean);
   h += rl('TriSD', 'TriSD', 'sqrt((O^2 + M^2 + P^2 - OM - OP - MP) / 18)', tSD);
+
+  if (!isNaN(bMean) && !isNaN(bSD)){
+    var badge = currentLang === 'vi' ? 'PHÂN TÍCH ƯỚC LƯỢNG 3 ĐIỂM PERT' : 'PERT 3-POINT ANALYSIS';
+    var p1 = bMean + bSD, p2 = bMean + 2 * bSD;
+    var meaning = '<ul>' +
+      '<li><strong>Thời gian kỳ vọng (Beta Mean = ' + fv(bMean) + '):</strong> Giá trị trung bình có trọng số (ưu tiên phương án Most Likely 4x).</li>' +
+      '<li><strong>Độ lệch chuẩn (&sigma; = ' + fv(bSD) + '):</strong> Thể hiện biên độ rủi ro bất định.</li>' +
+      '<li><strong>Xác suất cam kết hoàn thành:</strong>' +
+        '<ul>' +
+          '<li>68.3% cơ hội hoàn thành trước: <strong>' + p1.toFixed(2) + '</strong> (+1&sigma;)</li>' +
+          '<li>95.5% cơ hội hoàn thành trước: <strong>' + p2.toFixed(2) + '</strong> (+2&sigma;)</li>' +
+        '</ul>' +
+      '</li>' +
+    '</ul>';
+    var reco = '<ul>' +
+      '<li><strong>Quy tắc cam kết:</strong> Tuyệt đối không cam kết theo mốc Lạc quan (O) hoặc Khả dĩ nhất (M). Hãy sử dụng mốc &mu; + 1&sigma; (' + p1.toFixed(1) + ') hoặc &mu; + 2&sigma; (' + p2.toFixed(1) + ') để có đệm an toàn (Buffer) cho dự án.</li>' +
+      '<li><strong>Giảm rủi ro:</strong> Nếu khoảng cách (P - O) quá rộng, áp dụng phương pháp chuyên gia Delphi để thu hẹp độ phân tán.</li>' +
+    '</ul>';
+    h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
+  }
+
   document.getElementById('tab-10-output').innerHTML = h;
 }
 
@@ -1163,8 +1442,99 @@ function computeFinance(){
   h += rl('NPV', 'NPV', 'sum(CF_t / (1+r)^t)', npv);
   h += rl('IRR', 'IRR', 'Bisection [-0.99, 10]', irr);
   h += rl('Payback', 'Payback', 'Linear Interpolation', payback);
+
+  // Deep Financial & Technical Analysis
+  var badge = '', badgeClass = 'badge-good';
+  var meaning = '', reco = '';
+  
+  if (cfs.length === 1 && cfs[0] < 0) {
+    // Single negative cash flow with no future returns (like in the user screenshot!)
+    badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (CHỈ CÓ CHI PHÍ, CHƯA CÓ DOANH THU)' : (currentLang === 'zh' ? '项目不可行 (仅有成本流出，无现金回收)' : 'REJECT (OUTFLOW ONLY, NO FUTURE INFLOWS)');
+    badgeClass = 'badge-bad';
+    if (currentLang === 'vi') {
+      meaning = '<ul>' +
+        '<li><strong>Giá trị hiện tại thuần (NPV = ' + fv(npv) + '):</strong> Bị âm toàn bộ chi phí vốn. Dự án làm sụt giảm giá trị tài chính do chưa có dòng tiền dương bù đắp.</li>' +
+        '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> do không có dòng tiền đổi dấu (cần ít nhất một dòng tiền dương trong tương lai để xác định tỷ suất sinh lời và thời gian hòa vốn).</li>' +
+        (rate > 1 ? '<li><strong>Lưu ý về Discount Rate (' + rate + '):</strong> Suất chiết khấu đang được nhập rất lớn (thường suất chiết khấu trong thực tế dao động từ 8% đến 15%, ví dụ 0.10 thay vì số hàng nghìn).</li>' : '') +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>Nhập bổ sung dòng tiền:</strong> Thêm các kỳ doanh thu / dòng tiền thu về trong tương lai vào ô Cash Flows (ví dụ: <code>-453535, 150000, 200000, 250000</code>).</li>' +
+        '<li><strong>Điều chỉnh suất chiết khấu:</strong> Sử dụng lãi suất chiết khấu chuẩn hóa phản ánh chi phí vốn bình quân WACC (ví dụ nhập <code>0.10</code> tương đương 10%/năm).</li>' +
+        '<li><strong>Nếu đây là dự án phi lợi nhuận / chi phí nội bộ:</strong> Cần đánh giá theo phương diện Tổng chi phí sở hữu (TCO tại Tab 6) thay vì thẩm định NPV tài chính thuần túy.</li>' +
+      '</ul>';
+    } else if (currentLang === 'zh') {
+      meaning = '<ul>' +
+        '<li><strong>净现值 (NPV = ' + fv(npv) + '):</strong> 全额亏损，项目将破坏企业财务价值。</li>' +
+        '<li><strong>内部收益率 (IRR) & 回收期:</strong> <code>INVALID INPUT</code>，缺少未来正向现金流入，无法测算投资回报率。</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>补充未来现金流:</strong> 在输入框补充各期预期流入现金 (例如 <code>-453535, 150000, 200000, 250000</code>)。</li>' +
+        '<li><strong>合理设置折现率:</strong> 折现率通常设为资本加权成本 WACC (如 0.08 到 0.15)。</li>' +
+      '</ul>';
+    } else {
+      meaning = '<ul>' +
+        '<li><strong>Net Present Value (NPV = ' + fv(npv) + '):</strong> Negative value destruction. Only initial expenditure is recorded without revenue recovery.</li>' +
+        '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> because no positive cash inflows exist to calculate breakeven or internal yield.</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>Add Future Cash Inflows:</strong> Provide projected positive revenues across future periods (e.g. <code>-453535, 150000, 200000, 250000</code>).</li>' +
+        '<li><strong>Normalize Discount Rate:</strong> Input standard cost of capital rate (e.g. <code>0.10</code> for 10% WACC).</li>' +
+      '</ul>';
+    }
+  } else if (npv > 0) {
+    badge = currentLang === 'vi' ? 'DỰ ÁN KHẢ THI CAO VỀ TÀI CHÍNH (CHẤP THUẬN)' : (currentLang === 'zh' ? '财务高度可行 (建议采纳)' : 'FINANCIALLY VIABLE (ACCEPT PROJECT)');
+    badgeClass = 'badge-good';
+    if (currentLang === 'vi') {
+      meaning = '<ul>' +
+        '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> Dự án sinh lời vượt trên chi phí cơ hội của vốn. Tạo thêm thặng dư giá trị tài sản cho doanh nghiệp.</li>' +
+        '<li><strong>IRR (' + (isNaN(irr) ? 'N/A' : (irr*100).toFixed(2) + '%') + '):</strong> ' + (!isNaN(irr) ? (irr > rate ? 'Tỷ suất hoàn vốn nội bộ cao hơn suất chiết khấu mong đợi (' + (rate*100).toFixed(1) + '%).' : 'IRR thấp hơn suất chiết khấu.') : 'N/A') + '</li>' +
+        '<li><strong>Thời gian hoàn vốn (Payback):</strong> ' + (!isNaN(payback) ? payback.toFixed(2) + ' kỳ' : 'N/A') + '.</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>Quyết định đầu tư:</strong> Phê duyệt thực hiện dự án. Ưu tiên giải ngân theo các cột mốc bàn giao (Milestone payments).</li>' +
+        '<li><strong>Phòng ngừa rủi ro tài chính:</strong> Quản lý chặt trượt giá và chi phí vận hành để đảm bảo dòng tiền thực tế bám sát mô hình dự báo.</li>' +
+      '</ul>';
+    } else if (currentLang === 'zh') {
+      meaning = '<ul>' +
+        '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> 净现值大于0，项目带来超额财务价值。</li>' +
+        '<li><strong>IRR:</strong> ' + (!isNaN(irr) ? (irr*100).toFixed(2) + '%' : 'N/A') + '，高于基准资本成本。</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>投资决策:</strong> 建议正式立项实施，按交付里程碑控制分期付款。</li>' +
+      '</ul>';
+    } else {
+      meaning = '<ul>' +
+        '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> Generates positive economic value after covering the cost of capital.</li>' +
+        '<li><strong>IRR (' + (!isNaN(irr) ? (irr*100).toFixed(2) + '%' : 'N/A') + '):</strong> Exceeds hurdle discount rate (' + (rate*100).toFixed(1) + '%).</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>Investment Verdict:</strong> Accept project. Tie cash outflows strictly to validated deliverables.</li>' +
+      '</ul>';
+    }
+  } else {
+    badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (TỪ CHỐI ĐẦU TƯ)' : (currentLang === 'zh' ? '项目财务不可行 (建议拒绝)' : 'REJECT (UNVIABLE NPV)');
+    badgeClass = 'badge-bad';
+    if (currentLang === 'vi') {
+      meaning = '<ul>' +
+        '<li><strong>NPV = ' + fv(npv) + ' &le; 0:</strong> Dòng tiền chiết khấu thu về không đủ bù đắp chi phí vốn đầu tư. Dự án gây thua lỗ tài chính.</li>' +
+      '</ul>';
+      reco = '<ul>' +
+        '<li><strong>Đàm phán cắt giảm vốn đầu tư ban đầu (CF0):</strong> Giảm chi phí ban đầu để chuyển NPV sang giá trị dương.</li>' +
+        '<li><strong>Đẩy nhanh dòng tiền:</strong> Tăng giá bán hoặc tăng sản lượng bán trong các năm đầu (front-loading revenues).</li>' +
+      '</ul>';
+    } else if (currentLang === 'zh') {
+      meaning = '<ul><li><strong>NPV &le; 0:</strong> 项目净现值为负，无法收回资本成本。</li></ul>';
+      reco = '<ul><li>建议削减初期资本开支 (CapEx) 或优化商业模式以增加早期现金流入。</li></ul>';
+    } else {
+      meaning = '<ul><li><strong>NPV &le; 0:</strong> Project destroys financial value and fails the cost of capital hurdle.</li></ul>';
+      reco = '<ul><li>Reduce upfront CapEx or front-load revenues to push NPV into positive territory.</li></ul>';
+    }
+  }
+  h += renderAnalysisBox(badge, badgeClass, meaning, reco);
+
   document.getElementById('tab-11-output').innerHTML = h;
 }
+
 function npvCalc(cfs, r){
   var s = 0;
   for (var t = 0; t < cfs.length; t++) s += cfs[t] / Math.pow(1 + r, t);
