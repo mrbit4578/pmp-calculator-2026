@@ -1797,16 +1797,24 @@ async function apiRequest(provider, endpointPath, payload, customKey, customUrl)
   var baseUrl = customUrl || (provider === 'river' ? getRiverBaseUrl() : getExpBaseUrl());
   var urlsToTry = [];
 
-  if (window.location.protocol.startsWith('http')) {
-    // 1. Same-origin proxy (works on http://localhost:3000 and Vercel serverless /api/...)
-    urlsToTry.push('/api/' + provider + endpointPath);
-  } else if (window.location.protocol === 'file:') {
-    // 1. Try local dev server proxy if npm start is running
-    urlsToTry.push('http://localhost:3000/api/' + provider + endpointPath);
+  // For Experiential Labs: Direct API natively supports CORS from browser, try DIRECT FIRST!
+  if (provider === 'experiential') {
+    urlsToTry.push(baseUrl.replace(/\/+$/, '') + endpointPath);
+    if (window.location.protocol.startsWith('http')) {
+      urlsToTry.push('/api/experiential' + endpointPath);
+    } else if (window.location.protocol === 'file:') {
+      urlsToTry.push('http://localhost:3000/api/experiential' + endpointPath);
+    }
+  } else {
+    // For River.ai: Does not support browser CORS preflight directly, so try same-host proxy first
+    if (window.location.protocol.startsWith('http')) {
+      urlsToTry.push('/api/river' + endpointPath);
+    } else if (window.location.protocol === 'file:') {
+      urlsToTry.push('http://localhost:3000/api/river' + endpointPath);
+    }
+    // Also add direct URL as fallback
+    urlsToTry.push(baseUrl.replace(/\/+$/, '') + endpointPath);
   }
-
-  // 2. Direct upstream endpoint
-  urlsToTry.push(baseUrl.replace(/\/+$/, '') + endpointPath);
 
   var lastError = null;
   for (var i = 0; i < urlsToTry.length; i++) {
@@ -1829,7 +1837,14 @@ async function apiRequest(provider, endpointPath, payload, customKey, customUrl)
         return await res.json();
       }
 
-      // If server responded with status 4xx/5xx: Server was reached successfully!
+      // If status is 404 from a proxy candidate:
+      // It means this proxy path does not exist on current host.
+      // Do NOT throw error; continue to next candidate URL!
+      if (res.status === 404 && i < urlsToTry.length - 1) {
+        continue;
+      }
+
+      // Parse error body
       var errData = {};
       try { errData = await res.json(); } catch(e){}
       var serverMsg = errData.error ? (errData.error.message || JSON.stringify(errData.error)) : (errData.message || '');
@@ -1848,11 +1863,11 @@ async function apiRequest(provider, endpointPath, payload, customKey, customUrl)
       }
     } catch(err) {
       lastError = err;
-      // If error is an explicit HTTP error from server (401, 400, etc.), don't hide it or retry, throw immediately!
-      if (err.message && (err.message.includes('401') || err.message.includes('400') || err.message.includes('HTTP '))) {
+      // If error is an explicit 401 or 400 authentication/business validation, throw immediately
+      if (err.message && (err.message.includes('401') || err.message.includes('400'))) {
         throw err;
       }
-      // If network / CORS error (Failed to fetch), continue to next candidate
+      // If network / CORS error (Failed to fetch) or other recoverable error, continue to next candidate
     }
   }
 

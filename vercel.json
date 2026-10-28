@@ -1,11 +1,21 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS, PUT, DELETE" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-River-Base, X-Exp-Base" }
+      ]
+    }
+  ],
   "rewrites": [
-    { "source": "/api/river/(.*)", "destination": "/api/river.js" },
-    { "source": "/api/river", "destination": "/api/river.js" },
-    { "source": "/api/experiential/(.*)", "destination": "/api/experiential.js" },
-    { "source": "/api/experiential", "destination": "/api/experiential.js" },
+    { "source": "/api/river/(.*)", "destination": "/api/river/[...path]" },
+    { "source": "/api/river", "destination": "/api/river/index" },
+    { "source": "/api/experiential/(.*)", "destination": "/api/experiential/[...path]" },
+    { "source": "/api/experiential", "destination": "/api/experiential/index" },
     { "source": "/", "destination": "/index.html" },
     { "source": "/pmp-calculator", "destination": "/pmp-calculator.html" }
   ]
