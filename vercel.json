@@ -2,6 +2,10 @@
   "version": 2,
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/api/river/(.*)", "destination": "/api/river.js" },
+    { "source": "/api/river", "destination": "/api/river.js" },
+    { "source": "/api/experiential/(.*)", "destination": "/api/experiential.js" },
+    { "source": "/api/experiential", "destination": "/api/experiential.js" },
     { "source": "/", "destination": "/index.html" },
     { "source": "/pmp-calculator", "destination": "/pmp-calculator.html" }
   ]

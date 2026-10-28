@@ -587,11 +587,11 @@ table.ref-table th{background:#21262d;color:#58a6ff}
         <div style="margin-bottom:12px">
           <label style="display:block;margin-bottom:6px;font-weight:bold;color:#f0883e">Mô hình Ra Quyết Định (Decisions Model):</label>
           <select id="exp-model-select" onchange="onModelSelectChange('exp')" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:7px 10px;border-radius:4px;font-family:inherit;width:100%;font-size:12px">
-            <option value="gpt-6-luna-decisions" selected>gpt-6-luna-decisions (Chuyên gia thẩm định & Ra quyết định dự án)</option>
-            <option value="gpt-6-luna">gpt-6-luna</option>
-            <option value="claude-opus-5.5">Claude Opus 5.5</option>
-            <option value="gpt-5.1-sol">GPT-5.1 Sol</option>
-            <option value="deepseek-v4.1-flash">DeepSeek V4.1 Flash</option>
+            <option value="gpt-6-luna-decisions" selected>⚖️ gpt-6-luna-decisions (Thẩm định Quyết định & Phê duyệt - Decisions API)</option>
+            <option value="gpt-6-luna">💬 gpt-6-luna (Hội thoại & Phân tích Đa năng - Chat API)</option>
+            <option value="claude-opus-5.5">💬 claude-opus-5.5 (Chat API)</option>
+            <option value="deepseek-v4.1-flash">💬 deepseek-v4.1-flash (Chat API)</option>
+            <option value="gpt-5.1-sol">💬 gpt-5.1-sol (Chat API)</option>
             <option value="custom">Tùy chỉnh model khác...</option>
           </select>
           <input type="text" id="exp-model-custom" placeholder="Nhập tên model..." style="display:none;width:100%;margin-top:6px">
@@ -1785,6 +1785,92 @@ function onChatProviderSwitch(){
     '🔄 Switched to provider: **' + (val === 'river' ? 'River.ai (' + getRiverModel() + ')' : 'Experiential Labs (' + getExpModel() + ')') + '**.');
 }
 
+// --- ROBUST UNIFIED API REQUEST DISPATCHER ---
+async function apiRequest(provider, endpointPath, payload, customKey, customUrl){
+  var key = customKey || (provider === 'river' ? getRiverApiKey() : getExpApiKey());
+  if (!key){
+    throw new Error(currentLang === 'vi' ? 
+      ('Chưa cấu hình ' + (provider === 'river' ? 'River.ai' : 'Experiential Labs') + ' API Key. Vui lòng bấm Cài đặt AI để nhập key.') :
+      ((provider === 'river' ? 'River.ai' : 'Experiential Labs') + ' API Key not configured. Please open Settings.'));
+  }
+
+  var baseUrl = customUrl || (provider === 'river' ? getRiverBaseUrl() : getExpBaseUrl());
+  var urlsToTry = [];
+
+  if (window.location.protocol.startsWith('http')) {
+    // 1. Same-origin proxy (works on http://localhost:3000 and Vercel serverless /api/...)
+    urlsToTry.push('/api/' + provider + endpointPath);
+  } else if (window.location.protocol === 'file:') {
+    // 1. Try local dev server proxy if npm start is running
+    urlsToTry.push('http://localhost:3000/api/' + provider + endpointPath);
+  }
+
+  // 2. Direct upstream endpoint
+  urlsToTry.push(baseUrl.replace(/\/+$/, '') + endpointPath);
+
+  var lastError = null;
+  for (var i = 0; i < urlsToTry.length; i++) {
+    var candidateUrl = urlsToTry[i];
+    try {
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      };
+      if (provider === 'river') headers['X-River-Base'] = baseUrl;
+      if (provider === 'experiential') headers['X-Exp-Base'] = baseUrl;
+
+      var res = await fetch(candidateUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+
+      // If server responded with status 4xx/5xx: Server was reached successfully!
+      var errData = {};
+      try { errData = await res.json(); } catch(e){}
+      var serverMsg = errData.error ? (errData.error.message || JSON.stringify(errData.error)) : (errData.message || '');
+      if (!serverMsg && errData.answers && errData.answers.length > 0) serverMsg = errData.answers[0].rationale;
+
+      if (res.status === 401) {
+        throw new Error(currentLang === 'vi' ?
+          'Khóa API không hợp lệ hoặc đã hết hạn (HTTP 401: ' + (serverMsg || 'Unauthorized') + '). Vui lòng kiểm tra lại API Key.' :
+          'Invalid or expired API Key (HTTP 401: ' + (serverMsg || 'Unauthorized') + '). Please verify your API Key.');
+      } else if (res.status === 400) {
+        throw new Error(currentLang === 'vi' ?
+          'Yêu cầu không hợp lệ (HTTP 400: ' + (serverMsg || 'Bad Request') + ').' :
+          'Bad Request (HTTP 400: ' + (serverMsg || 'Bad Request') + ').');
+      } else {
+        throw new Error('HTTP ' + res.status + (serverMsg ? (': ' + serverMsg) : ''));
+      }
+    } catch(err) {
+      lastError = err;
+      // If error is an explicit HTTP error from server (401, 400, etc.), don't hide it or retry, throw immediately!
+      if (err.message && (err.message.includes('401') || err.message.includes('400') || err.message.includes('HTTP '))) {
+        throw err;
+      }
+      // If network / CORS error (Failed to fetch), continue to next candidate
+    }
+  }
+
+  // If all candidates failed with network/CORS error:
+  if (lastError && (lastError.message === 'Failed to fetch' || lastError.name === 'TypeError')) {
+    if (window.location.protocol === 'file:') {
+      throw new Error(currentLang === 'vi' ?
+        'Trình duyệt chặn kết nối API từ giao thức file:// do bảo mật CORS.\n👉 Khắc phục: Vui lòng mở ứng dụng qua http://localhost:3000 (chạy lệnh "npm start" trong terminal) hoặc sử dụng bản Vercel online.' :
+        'Browser blocked API connection from file:// due to CORS policy.\n👉 Fix: Please open via http://localhost:3000 (run "npm start" in terminal) or use Vercel online.');
+    } else {
+      throw new Error(currentLang === 'vi' ?
+        'Lỗi kết nối mạng (Failed to fetch). Vui lòng kiểm tra internet hoặc đảm bảo local server đang chạy ("npm start").' :
+        'Network error (Failed to fetch). Please check your internet connection or verify local server is running.');
+    }
+  }
+  throw lastError || new Error('Connection failed');
+}
+
 async function testCurrentProviderConnection(){
   var resEl = document.getElementById('test-conn-result');
   if (currentSettingsTab === 'river'){
@@ -1793,10 +1879,10 @@ async function testCurrentProviderConnection(){
     var sel = document.getElementById('river-model-select');
     var model = sel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : sel.value;
     if (!key){ resEl.innerHTML = '<span style="color:#f85149">❌ Vui lòng nhập River.ai API Key!</span>'; return; }
-    resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kết nối tới River.ai (' + model + ')...</span>';
+    resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kiểm tra kết nối tới River.ai (' + model + ')...</span>';
     try {
       var rep = await fetchRiverAI([{role: 'user', content: 'Reply: CONNECTED'}], key, url, model);
-      resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối River.ai thành công! Phản hồi: ' + rep.slice(0, 50) + '</span>';
+      resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối River.ai thành công! Phản hồi: ' + rep.slice(0, 60) + '</span>';
     } catch(e) {
       resEl.innerHTML = '<span style="color:#f85149">❌ Lỗi kết nối River.ai: ' + e.message + '</span>';
     }
@@ -1808,8 +1894,13 @@ async function testCurrentProviderConnection(){
     if (!key){ resEl.innerHTML = '<span style="color:#f85149">❌ Vui lòng nhập Experiential Labs API Key!</span>'; return; }
     resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kiểm tra Experiential Labs (' + model + ')...</span>';
     try {
-      var decision = await fetchExperientialDecision("Health check test connection.", "Test", key, url, model);
-      resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối Experiential Labs thành công! Phản hồi quyết định từ ' + model + ' sẵn sàng!</span>';
+      if (model.includes('decisions')) {
+        var decision = await fetchExperientialDecision("Health check ping test.", "Test", key, url, model);
+        resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối Experiential Labs thành công! Mô hình ' + model + ' sẵn sàng thẩm định quyết định!</span>';
+      } else {
+        var testChat = await apiRequest('experiential', '/chat/completions', { model: model, messages: [{role:'user', content:'Reply: CONNECTED'}] }, key, url);
+        resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối Experiential Labs thành công! Model: ' + model + '</span>';
+      }
     } catch(e) {
       resEl.innerHTML = '<span style="color:#f85149">❌ Lỗi kết nối Experiential Labs: ' + e.message + '</span>';
     }
@@ -1818,13 +1909,7 @@ async function testCurrentProviderConnection(){
 
 // --- RIVER.AI API CLIENT ---
 async function fetchRiverAI(messages, customKey, customUrl, customModel){
-  var key = customKey || getRiverApiKey();
-  if (!key){
-    throw new Error(currentLang === 'vi' ? 'Chưa cấu hình River.ai API Key. Vui lòng bấm Cài đặt API để nhập key.' : 'River.ai API Key not configured. Please open Settings.');
-  }
-  var url = (customUrl || getRiverBaseUrl()).replace(/\/+$/, '') + '/chat/completions';
-  var model = customModel || getRiverModel();
-
+  var model = customModel || getRiverModel() || 'moonshotai/Kimi-K3';
   var payload = {
     model: model,
     messages: [
@@ -1839,46 +1924,16 @@ async function fetchRiverAI(messages, customKey, customUrl, customModel){
     temperature: 0.3
   };
 
-  try {
-    var res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      var data = await res.json();
-      if (data.choices && data.choices[0] && data.choices[0].message) return data.choices[0].message.content;
-    } else {
-      var errData = await res.json().catch(function(){ return {}; });
-      throw new Error(errData.error ? (errData.error.message || JSON.stringify(errData.error)) : ('HTTP ' + res.status + ': ' + res.statusText));
-    }
-  } catch (err) {
-    if (window.location.protocol.startsWith('http') && window.location.hostname === 'localhost') {
-      try {
-        var pRes = await fetch('/api/river/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key, 'X-River-Base': customUrl || getRiverBaseUrl() },
-          body: JSON.stringify(payload)
-        });
-        if (pRes.ok) {
-          var pData = await pRes.json();
-          if (pData.choices && pData.choices[0] && pData.choices[0].message) return pData.choices[0].message.content;
-        }
-      } catch (pErr) {}
-    }
-    throw err;
+  var data = await apiRequest('river', '/chat/completions', payload, customKey, customUrl);
+  if (data.choices && data.choices[0] && data.choices[0].message) {
+    return data.choices[0].message.content;
   }
+  throw new Error('Dữ liệu phản hồi từ River.ai không hợp lệ: ' + JSON.stringify(data));
 }
 
 // --- EXPERIENTIAL LABS DECISIONS CLIENT (GPT-6 LUNA) ---
 async function fetchExperientialDecision(inputSummary, instructions, customKey, customUrl, customModel){
-  var key = customKey || getExpApiKey();
-  if (!key){
-    throw new Error(currentLang === 'vi' ? 'Chưa cấu hình Experiential Labs API Key. Vui lòng bấm Cài đặt API để nhập key.' : 'Experiential Labs API Key not configured. Please open Settings.');
-  }
-  var url = (customUrl || getExpBaseUrl()).replace(/\/+$/, '') + '/decisions';
   var model = customModel || getExpModel() || "gpt-6-luna-decisions";
-
   var payload = {
     model: model,
     input: inputSummary,
@@ -1886,7 +1941,7 @@ async function fetchExperientialDecision(inputSummary, instructions, customKey, 
       {
         type: "choice",
         name: "review",
-        instructions: instructions || "Does the supplied project data support accepting this proposal/baseline, or does it need rejection/further review?",
+        instructions: instructions || "Review this project data under PMI governance standards and managerial accounting principles. Decide whether to accept (approve baseline/proposal), reject (unviable or high cost overrun), or review (needs additional justification or missing data). Provide thorough rationale.",
         choices: [
           {
             value: "accept",
@@ -1905,31 +1960,7 @@ async function fetchExperientialDecision(inputSummary, instructions, customKey, 
     ]
   };
 
-  try {
-    var res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      return await res.json();
-    } else {
-      var errData = await res.json().catch(function(){ return {}; });
-      throw new Error(errData.error ? (errData.error.message || JSON.stringify(errData.error)) : ('HTTP ' + res.status + ': ' + res.statusText));
-    }
-  } catch (err) {
-    if (window.location.protocol.startsWith('http') && window.location.hostname === 'localhost') {
-      try {
-        var pRes = await fetch('/api/experiential/decisions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key, 'X-Exp-Base': customUrl || getExpBaseUrl() },
-          body: JSON.stringify(payload)
-        });
-        if (pRes.ok) return await pRes.json();
-      } catch (pErr) {}
-    }
-    throw err;
-  }
+  return await apiRequest('experiential', '/decisions', payload, customKey, customUrl);
 }
 
 // --- AI CHAT & DECISION RENDERING ---
@@ -2017,30 +2048,68 @@ async function sendAiMessage(){
     return;
   }
 
-  var loadingBubble = appendAiMessage('assistant', '⏳ ' + (currentLang === 'vi' ? 'Đang gửi yêu cầu tới ' + (provider==='river'?getRiverModel():getExpModel()) + '...' : 'Processing with ' + (provider==='river'?getRiverModel():getExpModel()) + '...'));
+  var currentModel = provider === 'river' ? getRiverModel() : getExpModel();
+  var loadingBubble = appendAiMessage('assistant', '⏳ ' + (currentLang === 'vi' ? 'Đang gửi yêu cầu tới ' + currentModel + ' (' + (provider==='river'?'River.ai':'Experiential Labs') + ')...' : 'Processing with ' + currentModel + '...'));
 
   try {
-    var response = '';
     if (provider === 'river'){
-      response = await fetchRiverAI(aiChatHistory);
+      var response = await fetchRiverAI(aiChatHistory);
+      loadingBubble.innerHTML = formatMarkdown(response);
+      aiChatHistory.push({role: 'assistant', content: response});
+      scrollAiChatToBottom();
     } else {
-      // Chat completion on Experiential
-      var expBase = getExpBaseUrl().replace(/\/+$/, '') + '/chat/completions';
-      var res = await fetch(expBase, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getExpApiKey() },
-        body: JSON.stringify({ model: getExpModel() || 'gpt-6-luna', messages: aiChatHistory, temperature: 0.3 })
-      });
-      if (res.ok){
-        var data = await res.json();
-        response = data.choices[0].message.content;
+      // Experiential Labs
+      if (currentModel.includes('decisions')) {
+        // Model is gpt-6-luna-decisions -> Use Decisions API!
+        var decRes = await fetchExperientialDecision(text, "Analyze the project data or financial question based on PMI standards and managerial accounting principles. Provide a decision verdict and in-depth rationale.");
+        var answer = decRes.answers && decRes.answers.length > 0 ? (decRes.answers.find(a => a.name === 'review') || decRes.answers[0]) : null;
+        if (answer) {
+          var val = (answer.answer || answer.value || '').toLowerCase();
+          var badgeClass = val === 'accept' ? 'decision-badge-accept' : (val === 'reject' ? 'decision-badge-reject' : 'decision-badge-review');
+          var badgeLabel = val === 'accept' ? '✅ ACCEPT (PHÊ DUYỆT)' : (val === 'reject' ? '❌ REJECT (TỪ CHỐI)' : '⚠️ REVIEW (CẦN GIẢI TRÌNH)');
+          var rationaleText = answer.rationale || answer.description || answer.answer || '';
+
+          var html = '<div class="decision-card">' +
+            '<div class="decision-header">' +
+              '<span class="' + badgeClass + '">' + badgeLabel + '</span>' +
+              '<span style="color:#8b949e;font-size:11px">Model: ' + currentModel + '</span>' +
+            '</div>' +
+            '<div style="margin-top:8px;line-height:1.6"><strong>Giải trình & Phân tích chuyên sâu:</strong><br>' + formatMarkdown(rationaleText) + '</div>' +
+            (answer.confidence ? '<div style="margin-top:6px;font-size:11px;color:#8b949e">Độ tin cậy mô hình: <strong>' + (answer.confidence * 100).toFixed(1) + '%</strong></div>' : '') +
+            (decRes.usage ? '<div style="margin-top:2px;font-size:10px;color:#8b949e">Tokens: ' + JSON.stringify(decRes.usage) + '</div>' : '') +
+          '</div>';
+          loadingBubble.innerHTML = html;
+          aiChatHistory.push({role: 'assistant', content: '[' + badgeLabel + '] ' + rationaleText});
+          scrollAiChatToBottom();
+        } else {
+          loadingBubble.innerHTML = '⚠️ Không nhận được câu trả lời từ mô hình quyết định: ' + JSON.stringify(decRes);
+        }
       } else {
-        throw new Error('HTTP ' + res.status);
+        // Conversational Chat Model on Experiential Labs (e.g. gpt-6-luna, claude-opus-5.5)
+        try {
+          var chatRes = await apiRequest('experiential', '/chat/completions', {
+            model: currentModel,
+            messages: aiChatHistory,
+            temperature: 0.3
+          });
+          var content = chatRes.choices && chatRes.choices[0] && chatRes.choices[0].message ? chatRes.choices[0].message.content : JSON.stringify(chatRes);
+          loadingBubble.innerHTML = formatMarkdown(content);
+          aiChatHistory.push({role: 'assistant', content: content});
+          scrollAiChatToBottom();
+        } catch(chatErr) {
+          // If 400 error on chat/completions, fallback to decisions API
+          if (chatErr.message && chatErr.message.includes('400')) {
+            var fbRes = await fetchExperientialDecision(text, "Analyze this prompt.");
+            var fbAnswer = fbRes.answers && fbRes.answers[0];
+            if (fbAnswer) {
+              loadingBubble.innerHTML = formatMarkdown(fbAnswer.rationale || fbAnswer.answer || JSON.stringify(fbRes));
+              return;
+            }
+          }
+          throw chatErr;
+        }
       }
     }
-    loadingBubble.innerHTML = formatMarkdown(response);
-    aiChatHistory.push({role: 'assistant', content: response});
-    scrollAiChatToBottom();
   } catch(err) {
     loadingBubble.innerHTML = '<span style="color:#f85149">❌ <strong>Lỗi kết nối AI:</strong> ' + err.message + '</span>';
   }

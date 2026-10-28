@@ -17,8 +17,10 @@ const server = http.createServer((req, res) => {
   }
 
   // River.ai proxy
-  if (req.url.startsWith('/api/river/')) {
-    const targetPath = req.url.replace('/api/river', '/v1');
+  if (req.url.startsWith('/api/river')) {
+    let subPath = req.url.replace(/^\/api\/river/, '');
+    if (!subPath.startsWith('/')) subPath = '/' + subPath;
+    const targetPath = '/v1' + subPath;
     const riverBase = req.headers['x-river-base'] || 'https://api.river.ai/v1';
     let hostname = 'api.river.ai';
     try {
@@ -38,12 +40,20 @@ const server = http.createServer((req, res) => {
     };
 
     const proxyReq = https.request(proxyOptions, (proxyRes) => {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      const combinedHeaders = Object.assign({}, proxyRes.headers, {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, POST, OPTIONS',
+        'access-control-allow-headers': 'Content-Type, Authorization, X-River-Base, X-Exp-Base'
+      });
+      res.writeHead(proxyRes.statusCode, combinedHeaders);
       proxyRes.pipe(res);
     });
 
     proxyReq.on('error', (err) => {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.writeHead(502, { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
       res.end(JSON.stringify({ error: { message: 'River proxy error: ' + err.message } }));
     });
 
@@ -52,8 +62,10 @@ const server = http.createServer((req, res) => {
   }
 
   // Experiential Labs proxy (GPT-6 Luna Decisions)
-  if (req.url.startsWith('/api/experiential/')) {
-    const targetPath = req.url.replace('/api/experiential', '/v1');
+  if (req.url.startsWith('/api/experiential')) {
+    let subPath = req.url.replace(/^\/api\/experiential/, '');
+    if (!subPath.startsWith('/')) subPath = '/' + subPath;
+    const targetPath = '/v1' + subPath;
     const expBase = req.headers['x-exp-base'] || 'https://api.experientiallabs.ai/v1';
     let hostname = 'api.experientiallabs.ai';
     try {
@@ -73,12 +85,20 @@ const server = http.createServer((req, res) => {
     };
 
     const proxyReq = https.request(proxyOptions, (proxyRes) => {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      const combinedHeaders = Object.assign({}, proxyRes.headers, {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, POST, OPTIONS',
+        'access-control-allow-headers': 'Content-Type, Authorization, X-River-Base, X-Exp-Base'
+      });
+      res.writeHead(proxyRes.statusCode, combinedHeaders);
       proxyRes.pipe(res);
     });
 
     proxyReq.on('error', (err) => {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.writeHead(502, { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
       res.end(JSON.stringify({ error: { message: 'Experiential proxy error: ' + err.message } }));
     });
 
@@ -96,14 +116,14 @@ const server = http.createServer((req, res) => {
     else if (ext === '.js') mime = 'application/javascript; charset=utf-8';
     else if (ext === '.json') mime = 'application/json';
     else if (ext === '.css') mime = 'text/css';
-    res.writeHead(200, { 'Content-Type': mime });
+    res.writeHead(200, { 'Content-Type': mime, 'Access-Control-Allow-Origin': '*' });
     res.end(fs.readFileSync(p));
   } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not found');
+    res.writeHead(404, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+    res.end('404 Not Found');
   }
 });
 
 server.listen(port, () => {
-  console.log('Server running at http://localhost:' + port);
+  console.log(`Server running at http://localhost:${port}`);
 });
