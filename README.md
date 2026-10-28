@@ -24,17 +24,26 @@ Bạn có thể chạy ứng dụng theo 2 cách:
 
 ---
 
-## 2. Quy Tắc Giao Diện & Tính Năng Mới
+## 2. Quy Tắc Giao Diện & Tính Năng Trọng Tâm
 
-* **Đấu nối Trợ lý AI Thông minh (Kimi-K3 via River.ai):**
-  * Tích hợp trực tiếp model **`moonshotai/Kimi-K3`** (hoặc DeepSeek-V4.1-Flash, Qwen3.8-27B) từ nền tảng River.ai.
-  * **Nút bấm `[ 🤖 Trợ lý AI ]` trên thanh điều hướng:** Mở cửa sổ chat chuyên sâu, cho phép hỏi đáp tự do mọi vấn đề về PMP, kế toán quản trị và tài chính dự án.
-  * **Nút bấm `[ 🤖 Tham vấn AI ]` trên mỗi Tab:** 1-Click tự động trích xuất toàn bộ dữ liệu nhập và kết quả tính toán gửi đến Kimi-K3 để:
-    * Đối chiếu và kiểm tra tính toán số học chuẩn xác.
-    * Phát hiện dữ liệu bất thường hoặc sai sót logic người dùng cần lưu ý.
-    * Phân tích ý nghĩa kế toán tài chính và tác động dòng tiền.
-    * Đưa ra giải pháp hành động cụ thể cho Project Manager.
-  * **Cài đặt API an toàn:** Bấm nút **`[ ⚙️ River.ai ]`** để nhập API Key (lấy từ [console.river.ai/inference](https://console.river.ai/inference)). Key được lưu an toàn trong trình duyệt (`localStorage`), không bao giờ bị lưu vào mã nguồn hay commit lên GitHub.
+* **Hệ sinh thái Trợ lý AI Kép (Dual-AI Platform: River.ai & Experiential Labs):**
+  * **1. River.ai (Logic Toán học, Kế toán Quản trị & Đối chiếu):**
+    * Tích hợp model **`moonshotai/Kimi-K3`** (khuyến nghị cho suy luận logic và tính toán số học phức tạp), ngoài ra hỗ trợ tùy chọn **`deepseek-ai/DeepSeek-V4.1-Flash`**, **`Qwen/Qwen3.8-27B-FP8`**, **`GLM-5.3`** qua API chuẩn OpenAI (`https://api.river.ai/v1`).
+    * **Nút `[ 🤖 Tham vấn AI ]` (1-Click Tab Audit):** Tự động gom toàn bộ tham số đầu vào và số liệu tính toán của Tab hiện tại, gửi đến AI để:
+      * Đối chiếu tính toán số học, phát hiện các trường hợp dữ liệu bất thường hoặc phép tính vô lý.
+      * Phân tích ý nghĩa tài chính kế toán quản trị, giải thích công thức dưới góc độ dòng tiền và ngân sách.
+      * Gợi ý phương án khắc phục (Fast-tracking, Crashing, Value Engineering).
+  * **2. Experiential Labs (GPT-6 Luna Decisions - Thẩm định Quyết định Dự án):**
+    * Tích hợp model **`gpt-6-luna-decisions`** (tại `https://api.experientiallabs.ai/v1/decisions`, nền tảng [platform.experientiallabs.ai](https://platform.experientiallabs.ai/models/gpt-6-luna-decisions)).
+    * **Nút `[ ⚖️ Quyết định GPT-6 ]` (1-Click Governance Gate):** Đóng vai trò Ban Quản trị Thay đổi (Change Control Board - CCB) hoặc Hội đồng Tài chính Dự án để đưa ra phán quyết quản trị chính thức:
+      * `✅ ACCEPT (PHÊ DUYỆT)`: Dự án/Phương án khả thi, số liệu đạt chuẩn kiểm soát rủi ro.
+      * `❌ REJECT (TỪ CHỐI)`: Dự án bội chi nghiêm trọng, NPV âm nặng hoặc rủi ro vượt ngưỡng chịu đựng.
+      * `⚠️ REVIEW (CẦN GIẢI TRÌNH THÊM)`: Dữ liệu chưa đủ tin cậy, thiếu dòng tiền hoặc có biến động bất thường cần thẩm tra bổ sung.
+      * Hiển thị kèm **Giải trình quyết định (Rationale)** và **Độ tin cậy mô hình (%)**.
+  * **Cài đặt API bảo mật tuyệt đối:**
+    * Bấm nút **`[ ⚙️ Cài đặt AI ]`** trên thanh điều hướng để mở bảng cấu hình 2 tab riêng biệt cho River.ai và Experiential Labs.
+    * Tích hợp nút **`🔌 Kiểm tra kết nối`** để ping thử API trực tiếp trước khi sử dụng.
+    * Toàn bộ API Key chỉ lưu trong trình duyệt người dùng (`localStorage`), không bao giờ bị lưu vào file mã nguồn hay commit lên GitHub.
 * **Đa ngôn ngữ (English / Tiếng Việt / 中文):**
   * Chuyển đổi linh hoạt 3 ngôn ngữ ngay trên thanh tiêu đề qua 3 nút: **`[ EN ]`**, **`[ Tiếng Việt ]`**, **`[ 中文 ]`**.
   * Chuyển đổi tự động toàn bộ tiêu đề, nhãn bảng, nút bấm, hướng dẫn và mô tả mà không làm gián đoạn dữ liệu đang nhập hay định dạng kiểm thử.
@@ -53,6 +62,8 @@ Bạn có thể chạy ứng dụng theo 2 cách:
   * **Compute / Tính toán:** Tính toán toàn bộ công thức của tab hiện tại.
   * **Copy / Sao chép:** Sao chép toàn bộ khối kết quả đầu ra vào Clipboard.
   * **Reset / Đặt lại:** Xóa trắng toàn bộ ô nhập liệu và kết quả của tab đó.
+  * **🤖 Tham vấn AI:** Gửi số liệu đến Kimi-K3 để phân tích kế toán và đối chiếu số học.
+  * **⚖️ Quyết định GPT-6:** Gửi số liệu đến GPT-6 Luna Decisions để thẩm định phê duyệt/từ chối.
 * **Xử lý ngoại lệ:** Khi ô nhập bị trống hoặc phép chia cho 0, dòng công thức tương ứng sẽ hiển thị `INVALID INPUT` mà không làm gián đoạn các phép tính khác.
 
 ---

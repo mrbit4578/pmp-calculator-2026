@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PMP Formula Calculator & AI Advisor</title>
+<title>PMP Formula Calculator & AI Decision Hub</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0d1117;color:#c9d1d9;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Courier New',Courier,monospace;padding:20px;font-size:13px;line-height:1.5}
@@ -43,6 +43,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#58a6ff}
 .btn-primary:hover{background:#2ea043}
 .btn-ai{background:#21262d;color:#7ee787;border:1px solid #238636;font-weight:bold}
 .btn-ai:hover{background:#238636;color:#ffffff}
+.btn-decision{background:#21262d;color:#f0883e;border:1px solid #d29922;font-weight:bold}
+.btn-decision:hover{background:#d29922;color:#ffffff}
 
 .output{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin-top:12px;min-height:50px;white-space:pre-wrap;line-height:1.8;font-size:12px}
 .output div{padding:2px 0}
@@ -81,10 +83,14 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 .modal-body{padding:18px;overflow-y:auto;flex:1}
 
 /* AI Chat Box */
-.ai-chat-box{max-width:880px;height:84vh;display:flex;flex-direction:column}
+.ai-chat-box{max-width:900px;height:86vh;display:flex;flex-direction:column}
+.ai-top-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:8px 16px;background:#161b22;border-bottom:1px solid #21262d;font-size:12px}
+.ai-provider-pill{background:#0d1117;border:1px solid #30363d;padding:4px 8px;border-radius:4px;color:#c9d1d9}
 .ai-quick-prompts{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;background:#0d1117;border-bottom:1px solid #21262d}
 .quick-chip{background:#161b22;border:1px solid #30363d;color:#c9d1d9;padding:4px 10px;border-radius:14px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .15s}
 .quick-chip:hover{background:#21262d;color:#58a6ff;border-color:#58a6ff}
+.quick-chip.decision-chip{border-color:#d29922;color:#f0883e}
+.quick-chip.decision-chip:hover{background:#d29922;color:#ffffff}
 .ai-chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:#0d1117}
 .ai-msg{display:flex;gap:10px;max-width:90%}
 .ai-msg.user{align-self:flex-end;flex-direction:row-reverse}
@@ -100,6 +106,13 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 .ai-chat-input-bar{display:flex;gap:8px;padding:12px 16px;background:#161b22;border-top:1px solid #30363d;align-items:flex-end}
 .ai-chat-input-bar textarea{flex:1;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:12px;resize:none;min-height:42px;max-height:120px}
 .ai-chat-input-bar textarea:focus{outline:none;border-color:#58a6ff}
+
+/* Decision Verdict Card */
+.decision-card{border:1px solid #30363d;border-radius:6px;padding:10px 14px;margin-top:6px;background:#0d1117}
+.decision-header{display:flex;align-items:center;gap:8px;font-weight:bold;font-size:13px;margin-bottom:6px}
+.decision-badge-accept{background:rgba(46,160,67,0.25);color:#3fb950;border:1px solid #2ea043;padding:2px 8px;border-radius:4px}
+.decision-badge-reject{background:rgba(248,81,73,0.25);color:#f85149;border:1px solid #f85149;padding:2px 8px;border-radius:4px}
+.decision-badge-review{background:rgba(210,153,34,0.25);color:#d29922;border:1px solid #d29922;padding:2px 8px;border-radius:4px}
 
 /* Mindmap Grid & Branches */
 .mindmap-root{text-align:center;background:#0d1117;border:1px solid #58a6ff;color:#58a6ff;padding:12px;border-radius:8px;font-weight:bold;margin-bottom:20px;font-size:14px;box-shadow:0 0 12px rgba(88,166,255,0.15)}
@@ -127,19 +140,19 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 <body>
 
 <div class="header">
-  <h1><span>📊</span> <span id="app-title">PMP Formula Calculator & AI Advisor</span></h1>
+  <h1><span>📊</span> <span id="app-title">PMP Formula Calculator & AI Decision Hub</span></h1>
   <div class="header-actions">
     <div class="lang-group">
       <button class="lang-btn active" id="btn-lang-en" onclick="setLanguage('en')">EN</button>
       <button class="lang-btn" id="btn-lang-vi" onclick="setLanguage('vi')">Tiếng Việt</button>
       <button class="lang-btn" id="btn-lang-zh" onclick="setLanguage('zh')">中文</button>
     </div>
-    <button class="nav-action-btn btn-ai-nav" onclick="openModal('modal-ai-chat')" title="Mở Trợ lý AI Kimi-K3">
+    <button class="nav-action-btn btn-ai-nav" onclick="openModal('modal-ai-chat')" title="Mở Trợ lý AI Kimi-K3 & GPT-6 Luna">
       <span>🤖</span> <span id="btn-ai-label">AI Advisor</span>
       <span class="ai-status-dot" id="ai-status-dot" title="Trạng thái API Key"></span>
     </button>
-    <button class="nav-action-btn" onclick="openModal('modal-ai-settings')" title="Cấu hình River.ai API Key">
-      <span>⚙️</span> <span id="btn-api-label">River.ai</span>
+    <button class="nav-action-btn" onclick="openModal('modal-ai-settings')" title="Cấu hình River.ai & Experiential Labs">
+      <span>⚙️</span> <span id="btn-api-label">AI Settings</span>
     </button>
     <button class="nav-action-btn" onclick="openModal('modal-mindmap')">
       <span>🗺️</span> <span id="btn-mindmap-label">Mindmap</span>
@@ -182,6 +195,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-1" onclick="copyOutput(1)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-1" onclick="resetTab(1)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-1" onclick="askAiAboutTab(1)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-1" onclick="askDecisionAboutTab(1)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-1-output"></div>
 </div>
@@ -205,6 +219,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-2" onclick="copyOutput(2)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-2" onclick="resetTab(2)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-2" onclick="askAiAboutTab(2)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-2" onclick="askDecisionAboutTab(2)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-2-output"></div>
 </div>
@@ -228,6 +243,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-3" onclick="copyOutput(3)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-3" onclick="resetTab(3)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-3" onclick="askAiAboutTab(3)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-3" onclick="askDecisionAboutTab(3)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-3-output"></div>
 </div>
@@ -256,6 +272,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-4" onclick="copyOutput(4)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-4" onclick="resetTab(4)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-4" onclick="askAiAboutTab(4)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-4" onclick="askDecisionAboutTab(4)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-4-output"></div>
 </div>
@@ -282,6 +299,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-5" onclick="copyOutput(5)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-5" onclick="resetTab(5)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-5" onclick="askAiAboutTab(5)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-5" onclick="askDecisionAboutTab(5)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-5-output"></div>
 </div>
@@ -310,6 +328,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-6" onclick="copyOutput(6)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-6" onclick="resetTab(6)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-6" onclick="askAiAboutTab(6)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-6" onclick="askDecisionAboutTab(6)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-6-output"></div>
 </div>
@@ -331,6 +350,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-7" onclick="copyOutput(7)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-7" onclick="resetTab(7)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-7" onclick="askAiAboutTab(7)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-7" onclick="askDecisionAboutTab(7)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-7-output"></div>
 </div>
@@ -353,6 +373,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-8" onclick="copyOutput(8)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-8" onclick="resetTab(8)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-8" onclick="askAiAboutTab(8)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-8" onclick="askDecisionAboutTab(8)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-8-output"></div>
 </div>
@@ -373,6 +394,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-9" onclick="copyOutput(9)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-9" onclick="resetTab(9)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-9" onclick="askAiAboutTab(9)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-9" onclick="askDecisionAboutTab(9)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-9-output"></div>
 </div>
@@ -393,6 +415,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-10" onclick="copyOutput(10)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-10" onclick="resetTab(10)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-10" onclick="askAiAboutTab(10)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-10" onclick="askDecisionAboutTab(10)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-10-output"></div>
 </div>
@@ -412,6 +435,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
     <button class="btn btn-copy" id="btn-copy-11" onclick="copyOutput(11)">Copy</button>
     <button class="btn btn-reset" id="btn-reset-11" onclick="resetTab(11)">Reset</button>
     <button class="btn btn-ai" id="btn-ai-audit-11" onclick="askAiAboutTab(11)">🤖 <span class="ai-btn-text">AI Audit</span></button>
+    <button class="btn btn-decision" id="btn-decision-11" onclick="askDecisionAboutTab(11)">⚖️ <span class="decision-btn-text">GPT-6 Decision</span></button>
   </div>
   <div class="output" id="tab-11-output"></div>
 </div>
@@ -458,25 +482,39 @@ table.ref-table th{background:#21262d;color:#58a6ff}
   </table>
 </div>
 
-<!-- MODAL: AI CHAT -->
+<!-- MODAL: AI CHAT & DECISION HUB -->
 <div class="modal-overlay" id="modal-ai-chat">
   <div class="modal-box ai-chat-box">
     <div class="modal-header">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:18px">🤖</span>
         <div>
-          <h3 id="ai-modal-title" style="margin:0;font-size:15px">PMP AI Financial & Technical Advisor</h3>
-          <span style="font-size:11px;color:#8b949e">Powered by <strong style="color:#58a6ff" id="lbl-active-model">moonshotai/Kimi-K3</strong> via River.ai</span>
+          <h3 id="ai-modal-title" style="margin:0;font-size:15px">PMP AI Financial & Decision Hub</h3>
+          <span style="font-size:11px;color:#8b949e">Provider: <strong style="color:#58a6ff" id="lbl-active-provider">River.ai</strong> | Model: <strong style="color:#7ee787" id="lbl-active-model">moonshotai/Kimi-K3</strong></span>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
-        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="openModal('modal-ai-settings')" title="Cài đặt API Key">⚙️ Settings</button>
+        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="openModal('modal-ai-settings')" title="Cài đặt Provider & API Key">⚙️ Settings</button>
         <button class="btn" style="padding:4px 8px;font-size:11px" onclick="clearAiChat()" title="Xóa lịch sử hội thoại">🗑️ Clear</button>
         <button class="modal-close" onclick="closeModal('modal-ai-chat')">✕</button>
       </div>
     </div>
+    <div class="ai-top-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span>Chọn nền tảng:</span>
+        <select id="chat-provider-toggle" onchange="onChatProviderSwitch()" style="background:#0d1117;color:#58a6ff;border:1px solid #30363d;padding:3px 6px;border-radius:4px;font-size:11px">
+          <option value="river">River.ai (Kimi-K3 / DeepSeek)</option>
+          <option value="experiential">Experiential Labs (GPT-6 Luna)</option>
+        </select>
+      </div>
+      <div style="color:#8b949e;font-size:11px">
+        <span>Quyết định chuyên sâu: </span>
+        <button class="btn btn-decision" style="padding:2px 8px;font-size:11px" onclick="triggerCurrentTabDecision()">⚖️ Thẩm định Quyết định GPT-6 Luna</button>
+      </div>
+    </div>
     <div class="ai-quick-prompts">
       <button class="quick-chip" onclick="quickAiPrompt('audit')">🔍 Đối chiếu số liệu Tab hiện tại</button>
+      <button class="quick-chip decision-chip" onclick="triggerCurrentTabDecision()">⚖️ Quyết định Phê duyệt (GPT-6 Luna)</button>
       <button class="quick-chip" onclick="quickAiPrompt('accounting')">📊 Phân tích kế toán tài chính & quản trị</button>
       <button class="quick-chip" onclick="quickAiPrompt('optimize')">💡 Gợi ý giải pháp tối ưu hóa</button>
       <button class="quick-chip" onclick="quickAiPrompt('exam')">🎓 Câu hỏi thi PMP tương tự</button>
@@ -491,44 +529,83 @@ table.ref-table th{background:#21262d;color:#58a6ff}
   </div>
 </div>
 
-<!-- MODAL: AI SETTINGS -->
+<!-- MODAL: AI SETTINGS (DUAL PROVIDERS) -->
 <div class="modal-overlay" id="modal-ai-settings">
-  <div class="modal-box" style="max-width:540px">
+  <div class="modal-box" style="max-width:620px">
     <div class="modal-header">
-      <h3 id="ai-settings-title"><span>⚙️</span> Cấu hình River.ai API (Kimi-K3)</h3>
+      <h3 id="ai-settings-title"><span>⚙️</span> Cấu hình Nền tảng AI (River.ai & Experiential Labs)</h3>
       <button class="modal-close" onclick="closeModal('modal-ai-settings')">✕</button>
     </div>
     <div class="modal-body" style="padding:20px">
-      <div style="margin-bottom:14px">
-        <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">River.ai API Key:</label>
-        <div style="display:flex;gap:6px">
-          <input type="password" id="river-api-key" placeholder="sk-... hoặc key từ console.river.ai" style="flex:1;width:auto">
-          <button class="btn" onclick="toggleKeyVisibility()" title="Ẩn/Hiện key">👁️</button>
+      <!-- Provider Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid #30363d;padding-bottom:10px">
+        <button class="btn btn-primary" id="settings-tab-btn-river" onclick="switchSettingsTab('river')">River.ai (Kimi-K3)</button>
+        <button class="btn" id="settings-tab-btn-exp" onclick="switchSettingsTab('experiential')">Experiential Labs (GPT-6 Luna)</button>
+      </div>
+
+      <!-- RIVER.AI PANEL -->
+      <div id="settings-panel-river">
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">River.ai API Key:</label>
+          <div style="display:flex;gap:6px">
+            <input type="password" id="river-api-key" placeholder="sk-..." style="flex:1;width:auto">
+            <button class="btn" onclick="toggleKeyVisibility('river-api-key')">👁️</button>
+          </div>
+          <p style="font-size:11px;color:#8b949e;margin-top:4px">Lấy key tại: <a href="https://console.river.ai/inference" target="_blank" style="color:#58a6ff">console.river.ai/inference</a></p>
         </div>
-        <p style="font-size:11px;color:#8b949e;margin-top:5px">Lấy key tại: <a href="https://console.river.ai/inference" target="_blank" style="color:#58a6ff">https://console.river.ai/inference</a>. Key được lưu an toàn cục bộ trong trình duyệt (localStorage), không đẩy lên GitHub.</p>
+
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">Mô hình AI (Model):</label>
+          <select id="river-model-select" onchange="onModelSelectChange('river')" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:7px 10px;border-radius:4px;font-family:inherit;width:100%;font-size:12px">
+            <option value="moonshotai/Kimi-K3" selected>moonshotai/Kimi-K3 (Khuyến nghị - Logic & Toán học vượt trội)</option>
+            <option value="deepseek-ai/DeepSeek-V4.1-Flash">deepseek-ai/DeepSeek-V4.1-Flash (Tốc độ phản hồi cực nhanh)</option>
+            <option value="Qwen/Qwen3.8-27B-FP8">Qwen/Qwen3.8-27B-FP8</option>
+            <option value="GLM-5.3">GLM-5.3</option>
+            <option value="zai-org/GLM-5.3-Flash">zai-org/GLM-5.3-Flash</option>
+            <option value="custom">Tùy chỉnh model khác...</option>
+          </select>
+          <input type="text" id="river-model-custom" placeholder="Nhập tên model..." style="display:none;width:100%;margin-top:6px">
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">Base URL:</label>
+          <input type="text" id="river-base-url" value="https://api.river.ai/v1" style="width:100%">
+        </div>
       </div>
 
-      <div style="margin-bottom:14px">
-        <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">Mô hình AI (Model):</label>
-        <select id="river-model-select" onchange="onModelSelectChange()" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:7px 10px;border-radius:4px;font-family:inherit;width:100%;font-size:12px">
-          <option value="moonshotai/Kimi-K3" selected>moonshotai/Kimi-K3 (Khuyến nghị - Logic & Toán học vượt trội)</option>
-          <option value="deepseek-ai/DeepSeek-V4.1-Flash">deepseek-ai/DeepSeek-V4.1-Flash (Tốc độ phản hồi cực nhanh)</option>
-          <option value="Qwen/Qwen3.8-27B-FP8">Qwen/Qwen3.8-27B-FP8</option>
-          <option value="GLM-5.3">GLM-5.3</option>
-          <option value="zai-org/GLM-5.3-Flash">zai-org/GLM-5.3-Flash</option>
-          <option value="custom">Tùy chỉnh model khác...</option>
-        </select>
-        <input type="text" id="river-model-custom" placeholder="Nhập định danh model..." style="display:none;width:100%;margin-top:6px">
-      </div>
+      <!-- EXPERIENTIAL LABS PANEL -->
+      <div id="settings-panel-exp" style="display:none">
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;font-weight:bold;color:#f0883e">Experiential Labs API Key:</label>
+          <div style="display:flex;gap:6px">
+            <input type="password" id="exp-api-key" placeholder="Key từ platform.experientiallabs.ai" style="flex:1;width:auto">
+            <button class="btn" onclick="toggleKeyVisibility('exp-api-key')">👁️</button>
+          </div>
+          <p style="font-size:11px;color:#8b949e;margin-top:4px">Lấy key tại: <a href="https://platform.experientiallabs.ai/models/gpt-6-luna-decisions" target="_blank" style="color:#f0883e">platform.experientiallabs.ai</a></p>
+        </div>
 
-      <div style="margin-bottom:18px">
-        <label style="display:block;margin-bottom:6px;font-weight:bold;color:#58a6ff">Base URL:</label>
-        <input type="text" id="river-base-url" value="https://api.river.ai/v1" style="width:100%">
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;font-weight:bold;color:#f0883e">Mô hình Ra Quyết Định (Decisions Model):</label>
+          <select id="exp-model-select" onchange="onModelSelectChange('exp')" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:7px 10px;border-radius:4px;font-family:inherit;width:100%;font-size:12px">
+            <option value="gpt-6-luna-decisions" selected>gpt-6-luna-decisions (Chuyên gia thẩm định & Ra quyết định dự án)</option>
+            <option value="gpt-6-luna">gpt-6-luna</option>
+            <option value="claude-opus-5.5">Claude Opus 5.5</option>
+            <option value="gpt-5.1-sol">GPT-5.1 Sol</option>
+            <option value="deepseek-v4.1-flash">DeepSeek V4.1 Flash</option>
+            <option value="custom">Tùy chỉnh model khác...</option>
+          </select>
+          <input type="text" id="exp-model-custom" placeholder="Nhập tên model..." style="display:none;width:100%;margin-top:6px">
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="display:block;margin-bottom:6px;font-weight:bold;color:#f0883e">Base URL:</label>
+          <input type="text" id="exp-base-url" value="https://api.experientiallabs.ai/v1" style="width:100%">
+        </div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #21262d;padding-top:14px">
-        <button class="btn" id="btn-test-conn" onclick="testRiverConnection()">🔌 Kiểm tra kết nối</button>
-        <button class="btn btn-primary" onclick="saveRiverSettings()">💾 Lưu cấu hình</button>
+        <button class="btn" id="btn-test-conn" onclick="testCurrentProviderConnection()">🔌 Kiểm tra kết nối</button>
+        <button class="btn btn-primary" onclick="saveAllAiSettings()">💾 Lưu toàn bộ cấu hình</button>
       </div>
       <div id="test-conn-result" style="margin-top:10px;font-size:12px"></div>
     </div>
@@ -760,7 +837,7 @@ table.ref-table th{background:#21262d;color:#58a6ff}
 // --- I18N DICTIONARY ---
 const I18N = {
   en: {
-    appTitle: "PMP Formula Calculator & AI Advisor",
+    appTitle: "PMP Formula Calculator & AI Decision Hub",
     btnAiLabel: "AI Advisor",
     btnMindmap: "Mindmap",
     btnGuide: "Result Guide",
@@ -768,6 +845,7 @@ const I18N = {
     btnCopy: "Copy",
     btnReset: "Reset",
     btnAiAudit: "AI Audit",
+    btnDecision: "GPT-6 Decision",
     btnAddRow: "+ Add Row",
     btnRemRow: "- Remove Row",
     mmModalTitle: "🗺️ PMP Knowledge Mindmap",
@@ -799,7 +877,7 @@ const I18N = {
     t12Desc: "Summary of core PMP formulas and mathematical relationships"
   },
   vi: {
-    appTitle: "Công cụ tính toán công thức PMP & Trợ lý AI",
+    appTitle: "Công cụ tính toán công thức PMP & AI Quyết Định",
     btnAiLabel: "Trợ lý AI",
     btnMindmap: "Sơ đồ Mindmap",
     btnGuide: "Hướng dẫn kết quả",
@@ -807,6 +885,7 @@ const I18N = {
     btnCopy: "Sao chép",
     btnReset: "Đặt lại",
     btnAiAudit: "Tham vấn AI",
+    btnDecision: "Quyết định GPT-6",
     btnAddRow: "+ Thêm dòng",
     btnRemRow: "- Xóa dòng",
     mmModalTitle: "🗺️ Sơ đồ tư duy PMP (PMP Knowledge Mindmap)",
@@ -838,7 +917,7 @@ const I18N = {
     t12Desc: "Tổng hợp toàn bộ các phương trình & ký hiệu công thức thi PMP"
   },
   zh: {
-    appTitle: "PMP 项目管理公式计算器与 AI 顾问",
+    appTitle: "PMP 项目管理公式计算器与 AI 决策中心",
     btnAiLabel: "AI 顾问",
     btnMindmap: "思维导图",
     btnGuide: "结果解读指南",
@@ -846,6 +925,7 @@ const I18N = {
     btnCopy: "复制结果",
     btnReset: "重置",
     btnAiAudit: "AI 智能核验",
+    btnDecision: "GPT-6 决策",
     btnAddRow: "+ 添加行",
     btnRemRow: "- 删除行",
     mmModalTitle: "🗺️ PMP 知识领域思维导图 (Mindmap)",
@@ -884,7 +964,6 @@ function setLanguage(lang) {
   if (!I18N[lang]) return;
   currentLang = lang;
   
-  // Update buttons state
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   var activeBtn = document.getElementById('btn-lang-' + lang);
   if (activeBtn) activeBtn.classList.add('active');
@@ -898,17 +977,16 @@ function setLanguage(lang) {
   document.getElementById('guide-modal-title').innerHTML = '<span>📖</span> ' + dict.guideModalTitle;
   document.getElementById('mm-root-text').innerText = dict.mmRootText;
 
-  // Buttons
   document.querySelectorAll('.btn-compute').forEach(b => b.innerText = dict.btnCompute);
   document.querySelectorAll('.btn-copy').forEach(b => b.innerText = dict.btnCopy);
   document.querySelectorAll('.btn-reset').forEach(b => b.innerText = dict.btnReset);
   document.querySelectorAll('.ai-btn-text').forEach(b => b.innerText = dict.btnAiAudit);
+  document.querySelectorAll('.decision-btn-text').forEach(b => b.innerText = dict.btnDecision);
   var addCpm = document.getElementById('btn-add-cpm');
   if (addCpm) addCpm.innerText = dict.btnAddRow;
   var remCpm = document.getElementById('btn-rem-cpm');
   if (remCpm) remCpm.innerText = dict.btnRemRow;
 
-  // Titles & Descs
   for (let i = 1; i <= 12; i++) {
     var titleEl = document.getElementById('t' + i + '-title');
     var descEl = document.getElementById('t' + i + '-desc');
@@ -916,7 +994,6 @@ function setLanguage(lang) {
     if (descEl && dict['t' + i + 'Desc']) descEl.innerText = dict['t' + i + 'Desc'];
   }
 
-  // Re-run active tab calculation if there is existing output
   var activePanel = document.querySelector('.tab-panel.active');
   if (activePanel) {
     var tabNum = parseInt(activePanel.id.replace('tab-', ''), 10);
@@ -936,7 +1013,7 @@ function openModal(id) {
     initAiChatWelcome();
     scrollAiChatToBottom();
   } else if (id === 'modal-ai-settings') {
-    loadSettingsInputs();
+    loadAllSettingsInputs();
   }
 }
 function closeModal(id) {
@@ -1047,26 +1124,26 @@ function computeEVM(){
     var badge = '', badgeClass = 'badge-good';
     var isCostOk = cpi >= 1, isSchedOk = spi >= 1;
     if (isCostOk && isSchedOk) {
-      badge = currentLang === 'vi' ? 'DỰ ÁN HIỆU QUẢ CAO' : (currentLang === 'zh' ? '项目表现极佳' : 'HEALTHY PROJECT');
+      badge = currentLang === 'vi' ? 'DỰ ÁN HIỆU QUẢ CAO' : 'HEALTHY PROJECT';
       badgeClass = 'badge-good';
     } else if (!isCostOk && !isSchedOk) {
-      badge = currentLang === 'vi' ? 'CẢNH BÁO NGUY CƠ CAO' : (currentLang === 'zh' ? '严重风险预警' : 'CRITICAL RISK');
+      badge = currentLang === 'vi' ? 'CẢNH BÁO NGUY CƠ CAO' : 'CRITICAL RISK';
       badgeClass = 'badge-bad';
     } else {
-      badge = currentLang === 'vi' ? 'CẢNH BÁO MỘT PHẦN' : (currentLang === 'zh' ? '部分指标预警' : 'WARNING');
+      badge = currentLang === 'vi' ? 'CẢNH BÁO MỘT PHẦN' : 'WARNING';
       badgeClass = 'badge-warn';
     }
 
     var meaning = '<ul>' +
-      '<li><strong>Chi phí (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Tiết kiệm chi phí. 1$ chi ra thu được ' + cpi.toFixed(2) + '$ giá trị hoàn thành.' : 'Bội chi. 1$ chi ra chỉ thu về ' + cpi.toFixed(2) + '$ giá trị (thất thoát ' + ((1-cpi)*100).toFixed(1) + '%).') + '</li>' +
-      '<li><strong>Tiến độ (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Vượt kế hoạch tiến độ.' : 'Chậm tiến độ (khối lượng thực hiện đạt ' + (spi*100).toFixed(1) + '% so với kế hoạch).') + '</li>' +
+      '<li><strong>Chi phí (CPI = ' + cpi.toFixed(2) + '):</strong> ' + (isCostOk ? 'Tiết kiệm chi phí. 1$ chi ra thu được ' + cpi.toFixed(2) + '$ giá trị hoàn thành.' : 'Bội chi. 1$ chi ra chỉ thu về ' + cpi.toFixed(2) + '$ giá trị.') + '</li>' +
+      '<li><strong>Tiến độ (SPI = ' + spi.toFixed(2) + '):</strong> ' + (isSchedOk ? 'Vượt kế hoạch tiến độ.' : 'Chậm tiến độ (khối lượng đạt ' + (spi*100).toFixed(1) + '% so với kế hoạch).') + '</li>' +
       '<li><strong>Dự báo hoàn thành (EAC):</strong> ' + (!isNaN(eac) ? fv(eac) : 'N/A') + ' (Chênh lệch VAC: ' + (!isNaN(vac) ? (vac>=0?'+':'')+fv(vac) : 'N/A') + ').</li>' +
       '<li><strong>Hiệu suất cần đạt (TCPI):</strong> ' + (!isNaN(tcpi_bac) ? tcpi_bac.toFixed(2) : 'N/A') + (tcpi_bac > 1.2 ? ' ⚠️ Vượt 1.2, ngân sách BAC bất khả thi.' : ' (Trong tầm kiểm soát).') + '</li>' +
     '</ul>';
     var reco = '<ul>' +
-      (!isCostOk ? '<li><strong>Kiểm soát chi phí:</strong> Áp dụng Value Engineering, rà soát loại bỏ Scope creep (tính năng vượt ngoài hợp đồng).</li>' : '') +
-      (!isSchedOk ? '<li><strong>Thúc đẩy tiến độ:</strong> Thực hiện Fast-tracking (chạy song song công việc) hoặc Crashing đường găng.</li>' : '') +
-      (tcpi_bac > 1.2 ? '<li><strong>Điều chỉnh ngân sách:</strong> Đệ trình ngay Change Request lên Sponsor để duyệt ngân sách mới theo EAC.</li>' : '') +
+      (!isCostOk ? '<li><strong>Kiểm soát chi phí:</strong> Áp dụng Value Engineering, rà soát loại bỏ Scope creep.</li>' : '') +
+      (!isSchedOk ? '<li><strong>Thúc đẩy tiến độ:</strong> Thực hiện Fast-tracking hoặc Crashing đường găng.</li>' : '') +
+      (tcpi_bac > 1.2 ? '<li><strong>Điều chỉnh ngân sách:</strong> Đệ trình Change Request lên Sponsor để duyệt ngân sách mới EAC.</li>' : '') +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
@@ -1235,10 +1312,10 @@ function computeQuality(){
     var badgeClass = is6Sigma ? 'badge-good' : (dpmo <= 6210 ? 'badge-warn' : 'badge-bad');
     var meaning = '<ul>' +
       '<li><strong>DPMO (' + fv(dpmo) + '):</strong> ' + (is6Sigma ? 'Đạt chuẩn 6 Sigma (99.99966% không lỗi).' : (dpmo <= 6210 ? 'Chuẩn công nghiệp thông thường (4-5 Sigma).' : 'Tỷ lệ lỗi cao (dưới 4 Sigma).')) + '</li>' +
-      '<li><strong>Chi phí chất lượng (CoQ = ' + fv(coq) + '):</strong> Chi phí tuân thủ (Phòng ngừa + Đánh giá: ' + fv(prev+appr) + ') vs Chi phí sai sót (Nội bộ + Bên ngoài: ' + fv(intF+extF) + ').</li>' +
+      '<li><strong>Chi phí chất lượng (CoQ = ' + fv(coq) + '):</strong> Chi phí tuân thủ (' + fv(prev+appr) + ') vs Chi phí sai sót (' + fv(intF+extF) + ').</li>' +
     '</ul>';
     var reco = '<ul>' +
-      '<li><strong>Chiến lược chất lượng:</strong> Đầu tư ngân sách vào Chi phí Phòng ngừa (đào tạo, checklist, tự động hóa) để triệt tiêu Chi phí Thất thoát bên ngoài (bồi thường, bảo hành).</li>' +
+      '<li><strong>Chiến lược chất lượng:</strong> Đầu tư ngân sách vào Chi phí Phòng ngừa (đào tạo, checklist, tự động hóa) để triệt tiêu Chi phí Thất thoát bên ngoài.</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
@@ -1346,7 +1423,6 @@ function computeStakeholder(){
     var reco = '<ul>' +
       (quad === 'High/High' ? '<li><strong>Manage Closely:</strong> Tham vấn ý kiến định kỳ, ưu tiên phản hồi và báo cáo tiến độ trực tiếp.</li>' : '') +
       (quad === 'High/Low' ? '<li><strong>Keep Satisfied:</strong> Cung cấp thông tin súc tích, tránh để họ chuyển sang thái độ phản đối.</li>' : '') +
-      (quad === 'Low/High' ? '<li><strong>Keep Informed:</strong> Giữ liên lạc thường xuyên để phát huy sự ủng hộ của họ.</li>' : '') +
     '</ul>';
     h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
   }
@@ -1374,7 +1450,6 @@ function computeComm(){
     '</ul>';
     var reco = '<ul>' +
       (n > 10 ? '<li><strong>Tái cấu trúc:</strong> Chia nhóm lớn thành các sub-team (mô hình 2-Pizza team: 5-8 người) với 1 đầu mối đại diện (SPOC).</li>' : '') +
-      '<li><strong>Tập trung hóa:</strong> Sử dụng Project Dashboard, Kanban thay vì gửi email chuỗi dài.</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, badgeClass, meaning, reco);
   }
@@ -1457,7 +1532,6 @@ function computePERT(){
     '</ul>';
     var reco = '<ul>' +
       '<li><strong>Cam kết an toàn:</strong> Sử dụng mốc &mu; + 1&sigma; (' + p1.toFixed(1) + ') hoặc &mu; + 2&sigma; (' + p2.toFixed(1) + ') làm đệm dự phòng (Buffer).</li>' +
-      '<li><strong>Thu hẹp độ phân tán:</strong> Tham vấn chuyên gia theo phương pháp Delphi để giảm khoảng cách (P - O).</li>' +
     '</ul>';
     h += renderAnalysisBox(badge, 'badge-info', meaning, reco);
   }
@@ -1517,20 +1591,19 @@ function computeFinance(){
   var meaning = '', reco = '';
   
   if (cfs.length === 1 && cfs[0] < 0) {
-    badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (CHỈ CÓ CHI PHÍ, CHƯA CÓ DOANH THU)' : (currentLang === 'zh' ? '项目不可行 (仅有成本流出，无现金回收)' : 'REJECT (OUTFLOW ONLY, NO FUTURE INFLOWS)');
+    badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (CHỈ CÓ CHI PHÍ, CHƯA CÓ DOANH THU)' : 'REJECT (OUTFLOW ONLY, NO FUTURE INFLOWS)';
     badgeClass = 'badge-bad';
     meaning = '<ul>' +
       '<li><strong>Giá trị hiện tại thuần (NPV = ' + fv(npv) + '):</strong> Bị âm toàn bộ chi phí vốn. Dự án làm sụt giảm giá trị tài chính do chưa có dòng tiền dương bù đắp.</li>' +
-      '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> do không có dòng tiền đổi dấu (cần ít nhất một dòng tiền dương trong tương lai để xác định tỷ suất sinh lời và thời gian hòa vốn).</li>' +
-      (rate > 1 ? '<li><strong>Lưu ý về Discount Rate (' + rate + '):</strong> Suất chiết khấu đang được nhập rất lớn (chuẩn thực tế thường từ 0.08 đến 0.15 tương đương 8% - 15%, ví dụ 0.10 thay vì số hàng nghìn).</li>' : '') +
+      '<li><strong>IRR & Payback:</strong> <code>INVALID INPUT</code> do không có dòng tiền đổi dấu.</li>' +
+      (rate > 1 ? '<li><strong>Lưu ý về Discount Rate (' + rate + '):</strong> Suất chiết khấu đang được nhập rất lớn (thực tế từ 0.08 đến 0.15 tương đương 8% - 15%, ví dụ 0.10 thay vì số hàng nghìn).</li>' : '') +
     '</ul>';
     reco = '<ul>' +
       '<li><strong>Bổ sung dòng tiền thu:</strong> Thêm các kỳ doanh thu dương trong tương lai vào ô Cash Flows (ví dụ: <code>-453535, 150000, 200000, 250000</code>).</li>' +
       '<li><strong>Điều chỉnh suất chiết khấu:</strong> Sử dụng lãi suất chiết khấu chuẩn hóa phản ánh chi phí vốn WACC (ví dụ nhập <code>0.10</code>).</li>' +
-      '<li><strong>Dự án chi phí nội bộ:</strong> Đánh giá theo Tổng chi phí sở hữu (TCO tại Tab 6) thay vì thẩm định NPV.</li>' +
     '</ul>';
   } else if (npv > 0) {
-    badge = currentLang === 'vi' ? 'DỰ ÁN KHẢ THI CAO VỀ TÀI CHÍNH (CHẤP THUẬN)' : (currentLang === 'zh' ? '财务高度可行 (建议采纳)' : 'FINANCIALLY VIABLE (ACCEPT PROJECT)');
+    badge = currentLang === 'vi' ? 'DỰ ÁN KHẢ THI CAO VỀ TÀI CHÍNH (CHẤP THUẬN)' : 'FINANCIALLY VIABLE (ACCEPT PROJECT)';
     badgeClass = 'badge-good';
     meaning = '<ul>' +
       '<li><strong>NPV = ' + fv(npv) + ' > 0:</strong> Dự án sinh lời vượt trên chi phí cơ hội của vốn. Tạo thêm thặng dư giá trị tài sản cho doanh nghiệp.</li>' +
@@ -1538,10 +1611,10 @@ function computeFinance(){
       '<li><strong>Thời gian hoàn vốn (Payback):</strong> ' + (!isNaN(payback) ? payback.toFixed(2) + ' kỳ' : 'N/A') + '.</li>' +
     '</ul>';
     reco = '<ul>' +
-      '<li><strong>Quyết định đầu tư:</strong> Phê duyệt thực hiện dự án. Ưu tiên giải ngân theo các cột mốc bàn giao (Milestone payments).</li>' +
+      '<li><strong>Quyết định đầu tư:</strong> Phê duyệt thực hiện dự án. Ưu tiên giải ngân theo các cột mốc bàn giao.</li>' +
     '</ul>';
   } else {
-    badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (TỪ CHỐI ĐẦU TƯ)' : (currentLang === 'zh' ? '项目财务不可行 (建议拒绝)' : 'REJECT (UNVIABLE NPV)');
+    badge = currentLang === 'vi' ? 'DỰ ÁN KHÔNG KHẢ THI (TỪ CHỐI ĐẦU TƯ)' : 'REJECT (UNVIABLE NPV)';
     badgeClass = 'badge-bad';
     meaning = '<ul>' +
       '<li><strong>NPV = ' + fv(npv) + ' &le; 0:</strong> Dòng tiền chiết khấu thu về không đủ bù đắp chi phí vốn đầu tư. Dự án gây thua lỗ tài chính.</li>' +
@@ -1562,105 +1635,184 @@ function npvCalc(cfs, r){
   return s;
 }
 
-// --- RIVER.AI CONFIG & STORAGE ---
-function getRiverApiKey(){
-  return localStorage.getItem('river_api_key') || '';
+// --- DUAL PROVIDER CONFIG & STORAGE ---
+function getActiveProvider(){
+  return localStorage.getItem('active_ai_provider') || 'river';
 }
-function getRiverBaseUrl(){
-  return localStorage.getItem('river_base_url') || 'https://api.river.ai/v1';
+function setActiveProvider(p){
+  localStorage.setItem('active_ai_provider', p);
+  updateAiStatusIndicator();
 }
-function getRiverModel(){
-  return localStorage.getItem('river_model') || 'moonshotai/Kimi-K3';
-}
+
+// River.ai getters
+function getRiverApiKey(){ return localStorage.getItem('river_api_key') || ''; }
+function getRiverBaseUrl(){ return localStorage.getItem('river_base_url') || 'https://api.river.ai/v1'; }
+function getRiverModel(){ return localStorage.getItem('river_model') || 'moonshotai/Kimi-K3'; }
+
+// Experiential Labs getters
+function getExpApiKey(){ return localStorage.getItem('exp_api_key') || ''; }
+function getExpBaseUrl(){ return localStorage.getItem('exp_base_url') || 'https://api.experientiallabs.ai/v1'; }
+function getExpModel(){ return localStorage.getItem('exp_model') || 'gpt-6-luna-decisions'; }
+
 function updateAiStatusIndicator(){
-  var key = getRiverApiKey();
+  var provider = getActiveProvider();
+  var key = provider === 'river' ? getRiverApiKey() : getExpApiKey();
+  var model = provider === 'river' ? getRiverModel() : getExpModel();
+
   var dot = document.getElementById('ai-status-dot');
   if (dot) {
     if (key && key.length > 5) {
       dot.classList.add('active');
-      dot.title = 'River.ai Connected (' + getRiverModel() + ')';
+      dot.title = (provider === 'river' ? 'River.ai' : 'Experiential Labs') + ' Connected (' + model + ')';
     } else {
       dot.classList.remove('active');
-      dot.title = 'Chưa cấu hình API Key River.ai';
+      dot.title = 'Chưa cấu hình API Key (' + (provider === 'river' ? 'River.ai' : 'Experiential Labs') + ')';
     }
   }
-  var lbl = document.getElementById('lbl-active-model');
-  if (lbl) lbl.innerText = getRiverModel();
+
+  var lblProv = document.getElementById('lbl-active-provider');
+  if (lblProv) lblProv.innerText = provider === 'river' ? 'River.ai' : 'Experiential Labs';
+  var lblMod = document.getElementById('lbl-active-model');
+  if (lblMod) lblMod.innerText = model;
+
+  var toggleEl = document.getElementById('chat-provider-toggle');
+  if (toggleEl) toggleEl.value = provider;
 }
 
-function loadSettingsInputs(){
-  document.getElementById('river-api-key').value = getRiverApiKey();
-  document.getElementById('river-base-url').value = getRiverBaseUrl();
-  var model = getRiverModel();
-  var sel = document.getElementById('river-model-select');
-  var customIn = document.getElementById('river-model-custom');
-  var match = false;
-  for (var i = 0; i < sel.options.length; i++){
-    if (sel.options[i].value === model){
-      sel.selectedIndex = i;
-      match = true;
-      break;
-    }
-  }
-  if (!match){
-    sel.value = 'custom';
-    customIn.value = model;
-    customIn.style.display = 'block';
+// Settings modal tabs & input loading
+var currentSettingsTab = 'river';
+function switchSettingsTab(tab){
+  currentSettingsTab = tab;
+  var btnRiver = document.getElementById('settings-tab-btn-river');
+  var btnExp = document.getElementById('settings-tab-btn-exp');
+  var panelRiver = document.getElementById('settings-panel-river');
+  var panelExp = document.getElementById('settings-panel-exp');
+
+  if (tab === 'river'){
+    btnRiver.className = 'btn btn-primary';
+    btnExp.className = 'btn';
+    panelRiver.style.display = 'block';
+    panelExp.style.display = 'none';
   } else {
-    customIn.style.display = 'none';
+    btnRiver.className = 'btn';
+    btnExp.className = 'btn btn-primary';
+    panelRiver.style.display = 'none';
+    panelExp.style.display = 'block';
   }
   document.getElementById('test-conn-result').innerHTML = '';
 }
 
-function onModelSelectChange(){
-  var sel = document.getElementById('river-model-select');
-  var customIn = document.getElementById('river-model-custom');
-  if (sel.value === 'custom'){
-    customIn.style.display = 'block';
+function loadAllSettingsInputs(){
+  // River
+  document.getElementById('river-api-key').value = getRiverApiKey();
+  document.getElementById('river-base-url').value = getRiverBaseUrl();
+  var rModel = getRiverModel();
+  var rSel = document.getElementById('river-model-select');
+  var rCust = document.getElementById('river-model-custom');
+  var rMatch = false;
+  for (var i = 0; i < rSel.options.length; i++){
+    if (rSel.options[i].value === rModel){ rSel.selectedIndex = i; rMatch = true; break; }
+  }
+  if (!rMatch){ rSel.value = 'custom'; rCust.value = rModel; rCust.style.display = 'block'; }
+  else { rCust.style.display = 'none'; }
+
+  // Experiential
+  document.getElementById('exp-api-key').value = getExpApiKey();
+  document.getElementById('exp-base-url').value = getExpBaseUrl();
+  var eModel = getExpModel();
+  var eSel = document.getElementById('exp-model-select');
+  var eCust = document.getElementById('exp-model-custom');
+  var eMatch = false;
+  for (var i = 0; i < eSel.options.length; i++){
+    if (eSel.options[i].value === eModel){ eSel.selectedIndex = i; eMatch = true; break; }
+  }
+  if (!eMatch){ eSel.value = 'custom'; eCust.value = eModel; eCust.style.display = 'block'; }
+  else { eCust.style.display = 'none'; }
+
+  switchSettingsTab(getActiveProvider());
+  document.getElementById('test-conn-result').innerHTML = '';
+}
+
+function onModelSelectChange(provider){
+  if (provider === 'river'){
+    var sel = document.getElementById('river-model-select');
+    var cust = document.getElementById('river-model-custom');
+    cust.style.display = sel.value === 'custom' ? 'block' : 'none';
   } else {
-    customIn.style.display = 'none';
+    var sel = document.getElementById('exp-model-select');
+    var cust = document.getElementById('exp-model-custom');
+    cust.style.display = sel.value === 'custom' ? 'block' : 'none';
   }
 }
 
-function toggleKeyVisibility(){
-  var inEl = document.getElementById('river-api-key');
+function toggleKeyVisibility(id){
+  var inEl = document.getElementById(id);
   inEl.type = inEl.type === 'password' ? 'text' : 'password';
 }
 
-function saveRiverSettings(){
-  var key = document.getElementById('river-api-key').value.trim();
-  var url = document.getElementById('river-base-url').value.trim() || 'https://api.river.ai/v1';
-  var sel = document.getElementById('river-model-select');
-  var model = sel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : sel.value;
+function saveAllAiSettings(){
+  // River
+  var rKey = document.getElementById('river-api-key').value.trim();
+  var rUrl = document.getElementById('river-base-url').value.trim() || 'https://api.river.ai/v1';
+  var rSel = document.getElementById('river-model-select');
+  var rModel = rSel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : rSel.value;
+  localStorage.setItem('river_api_key', rKey);
+  localStorage.setItem('river_base_url', rUrl);
+  localStorage.setItem('river_model', rModel);
 
-  localStorage.setItem('river_api_key', key);
-  localStorage.setItem('river_base_url', url);
-  localStorage.setItem('river_model', model);
+  // Experiential
+  var eKey = document.getElementById('exp-api-key').value.trim();
+  var eUrl = document.getElementById('exp-base-url').value.trim() || 'https://api.experientiallabs.ai/v1';
+  var eSel = document.getElementById('exp-model-select');
+  var eModel = eSel.value === 'custom' ? (document.getElementById('exp-model-custom').value.trim() || 'gpt-6-luna-decisions') : eSel.value;
+  localStorage.setItem('exp_api_key', eKey);
+  localStorage.setItem('exp_base_url', eUrl);
+  localStorage.setItem('exp_model', eModel);
 
+  setActiveProvider(currentSettingsTab);
   updateAiStatusIndicator();
+
   var resEl = document.getElementById('test-conn-result');
-  resEl.innerHTML = '<span style="color:#3fb950">✅ Đã lưu cấu hình thành công! Mô hình đang chọn: ' + model + '</span>';
-  setTimeout(function(){ closeModal('modal-ai-settings'); }, 1200);
+  resEl.innerHTML = '<span style="color:#3fb950">✅ Đã lưu toàn bộ cấu hình thành công! Provider đang kích hoạt: ' + (currentSettingsTab === 'river' ? 'River.ai (' + rModel + ')' : 'Experiential Labs (' + eModel + ')') + '</span>';
+  setTimeout(function(){ closeModal('modal-ai-settings'); }, 1400);
 }
 
-async function testRiverConnection(){
-  var key = document.getElementById('river-api-key').value.trim();
-  var url = document.getElementById('river-base-url').value.trim() || 'https://api.river.ai/v1';
-  var sel = document.getElementById('river-model-select');
-  var model = sel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : sel.value;
+function onChatProviderSwitch(){
+  var val = document.getElementById('chat-provider-toggle').value;
+  setActiveProvider(val);
+  appendAiMessage('assistant', currentLang === 'vi' ?
+    '🔄 Đã chuyển sang nền tảng: **' + (val === 'river' ? 'River.ai (' + getRiverModel() + ')' : 'Experiential Labs (' + getExpModel() + ')') + '**.' :
+    '🔄 Switched to provider: **' + (val === 'river' ? 'River.ai (' + getRiverModel() + ')' : 'Experiential Labs (' + getExpModel() + ')') + '**.');
+}
+
+async function testCurrentProviderConnection(){
   var resEl = document.getElementById('test-conn-result');
-
-  if (!key){
-    resEl.innerHTML = '<span style="color:#f85149">❌ Vui lòng nhập API Key trước khi kiểm tra!</span>';
-    return;
-  }
-
-  resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kết nối tới ' + url + ' với model ' + model + '...</span>';
-  try {
-    var reply = await fetchRiverAI([{role: 'user', content: 'Reply with the exact word: CONNECTED'}], key, url, model);
-    resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối River.ai thành công! Phản hồi từ ' + model + ': <code>' + reply.slice(0, 50) + '</code></span>';
-  } catch(e) {
-    resEl.innerHTML = '<span style="color:#f85149">❌ Lỗi kết nối: ' + e.message + '</span>';
+  if (currentSettingsTab === 'river'){
+    var key = document.getElementById('river-api-key').value.trim();
+    var url = document.getElementById('river-base-url').value.trim() || 'https://api.river.ai/v1';
+    var sel = document.getElementById('river-model-select');
+    var model = sel.value === 'custom' ? (document.getElementById('river-model-custom').value.trim() || 'moonshotai/Kimi-K3') : sel.value;
+    if (!key){ resEl.innerHTML = '<span style="color:#f85149">❌ Vui lòng nhập River.ai API Key!</span>'; return; }
+    resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kết nối tới River.ai (' + model + ')...</span>';
+    try {
+      var rep = await fetchRiverAI([{role: 'user', content: 'Reply: CONNECTED'}], key, url, model);
+      resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối River.ai thành công! Phản hồi: ' + rep.slice(0, 50) + '</span>';
+    } catch(e) {
+      resEl.innerHTML = '<span style="color:#f85149">❌ Lỗi kết nối River.ai: ' + e.message + '</span>';
+    }
+  } else {
+    var key = document.getElementById('exp-api-key').value.trim();
+    var url = document.getElementById('exp-base-url').value.trim() || 'https://api.experientiallabs.ai/v1';
+    var sel = document.getElementById('exp-model-select');
+    var model = sel.value === 'custom' ? (document.getElementById('exp-model-custom').value.trim() || 'gpt-6-luna-decisions') : sel.value;
+    if (!key){ resEl.innerHTML = '<span style="color:#f85149">❌ Vui lòng nhập Experiential Labs API Key!</span>'; return; }
+    resEl.innerHTML = '<span style="color:#58a6ff">⏳ Đang kiểm tra Experiential Labs (' + model + ')...</span>';
+    try {
+      var decision = await fetchExperientialDecision("Health check test connection.", "Test", key, url, model);
+      resEl.innerHTML = '<span style="color:#3fb950">✅ Kết nối Experiential Labs thành công! Phản hồi quyết định từ ' + model + ' sẵn sàng!</span>';
+    } catch(e) {
+      resEl.innerHTML = '<span style="color:#f85149">❌ Lỗi kết nối Experiential Labs: ' + e.message + '</span>';
+    }
   }
 }
 
@@ -1668,7 +1820,7 @@ async function testRiverConnection(){
 async function fetchRiverAI(messages, customKey, customUrl, customModel){
   var key = customKey || getRiverApiKey();
   if (!key){
-    throw new Error(currentLang === 'vi' ? 'Chưa cấu hình API Key. Vui lòng bấm Cài đặt API để nhập key.' : 'API Key not configured. Please open Settings.');
+    throw new Error(currentLang === 'vi' ? 'Chưa cấu hình River.ai API Key. Vui lòng bấm Cài đặt API để nhập key.' : 'River.ai API Key not configured. Please open Settings.');
   }
   var url = (customUrl || getRiverBaseUrl()).replace(/\/+$/, '') + '/chat/completions';
   var model = customModel || getRiverModel();
@@ -1678,57 +1830,39 @@ async function fetchRiverAI(messages, customKey, customUrl, customModel){
     messages: [
       {
         role: "system",
-        content: "Bạn là Chuyên gia Cố vấn Cao cấp về Quản lý Dự án PMP, Kế toán Quản trị, Thẩm định Tài chính Doanh nghiệp và Kiểm toán Số học.\n" +
-          "Nhiệm vụ của bạn là:\n" +
-          "1. Đối chiếu và kiểm tra tính toán: Đảm bảo các kết quả số học hoàn toàn chính xác theo chuẩn PMI PMP.\n" +
-          "2. Kiểm tra tính hợp lý của số liệu nhập: Phát hiện và cảnh báo các số liệu bất thường (ví dụ: suất chiết khấu quá cao, chỉ có chi phí mà thiếu dòng thu dương, thời lượng âm, quá tải nhân lực...).\n" +
-          "3. Giải thích ý nghĩa số học và kế toán quản trị: Tác động của các con số đến dòng tiền, thặng dư vốn, hiệu suất chi phí và rủi ro tiến độ.\n" +
-          "4. Đưa ra hướng cải tiến và giải pháp thực chiến tối ưu hóa dự án.\n" +
-          "Trả lời bằng định dạng Markdown rõ ràng, chuyên nghiệp, ngôn ngữ: " + (currentLang === 'vi' ? 'Tiếng Việt' : (currentLang === 'zh' ? '中文' : 'English')) + "."
+        content: "Bạn là Chuyên gia Cố vấn Cao cấp về Quản lý Dự án PMP, Kế toán Quản trị và Thẩm định Tài chính Doanh nghiệp.\n" +
+          "Nhiệm vụ: Đối chiếu tính toán, kiểm tra tính hợp lý của số liệu, giải thích kế toán tài chính và đề xuất giải pháp tối ưu.\n" +
+          "Ngôn ngữ trả lời: " + (currentLang === 'vi' ? 'Tiếng Việt' : (currentLang === 'zh' ? '中文' : 'English')) + "."
       },
       ...messages
     ],
     temperature: 0.3
   };
 
-  // Direct Browser Fetch
   try {
     var res = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
       body: JSON.stringify(payload)
     });
     if (res.ok) {
       var data = await res.json();
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        return data.choices[0].message.content;
-      }
+      if (data.choices && data.choices[0] && data.choices[0].message) return data.choices[0].message.content;
     } else {
       var errData = await res.json().catch(function(){ return {}; });
-      var msg = errData.error ? (errData.error.message || JSON.stringify(errData.error)) : ('HTTP ' + res.status + ': ' + res.statusText);
-      throw new Error(msg);
+      throw new Error(errData.error ? (errData.error.message || JSON.stringify(errData.error)) : ('HTTP ' + res.status + ': ' + res.statusText));
     }
   } catch (err) {
-    // If local dev server proxy is available
     if (window.location.protocol.startsWith('http') && window.location.hostname === 'localhost') {
       try {
         var pRes = await fetch('/api/river/chat/completions', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + key,
-            'X-River-Base': customUrl || getRiverBaseUrl()
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key, 'X-River-Base': customUrl || getRiverBaseUrl() },
           body: JSON.stringify(payload)
         });
         if (pRes.ok) {
           var pData = await pRes.json();
-          if (pData.choices && pData.choices[0] && pData.choices[0].message) {
-            return pData.choices[0].message.content;
-          }
+          if (pData.choices && pData.choices[0] && pData.choices[0].message) return pData.choices[0].message.content;
         }
       } catch (pErr) {}
     }
@@ -1736,20 +1870,83 @@ async function fetchRiverAI(messages, customKey, customUrl, customModel){
   }
 }
 
-// --- AI CHAT INTERFACE LOGIC ---
+// --- EXPERIENTIAL LABS DECISIONS CLIENT (GPT-6 LUNA) ---
+async function fetchExperientialDecision(inputSummary, instructions, customKey, customUrl, customModel){
+  var key = customKey || getExpApiKey();
+  if (!key){
+    throw new Error(currentLang === 'vi' ? 'Chưa cấu hình Experiential Labs API Key. Vui lòng bấm Cài đặt API để nhập key.' : 'Experiential Labs API Key not configured. Please open Settings.');
+  }
+  var url = (customUrl || getExpBaseUrl()).replace(/\/+$/, '') + '/decisions';
+  var model = customModel || getExpModel() || "gpt-6-luna-decisions";
+
+  var payload = {
+    model: model,
+    input: inputSummary,
+    questions: [
+      {
+        type: "choice",
+        name: "review",
+        instructions: instructions || "Does the supplied project data support accepting this proposal/baseline, or does it need rejection/further review?",
+        choices: [
+          {
+            value: "accept",
+            description: "The calculations and evidence support accepting the project/baseline as viable and within governance criteria."
+          },
+          {
+            value: "reject",
+            description: "The proposal is unviable (severe cost overrun, negative NPV, extreme risk) and should be rejected."
+          },
+          {
+            value: "review",
+            description: "Evidence is missing, data is abnormal (e.g. extreme rates, missing inflows), or requires further managerial review."
+          }
+        ]
+      }
+    ]
+  };
+
+  try {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      return await res.json();
+    } else {
+      var errData = await res.json().catch(function(){ return {}; });
+      throw new Error(errData.error ? (errData.error.message || JSON.stringify(errData.error)) : ('HTTP ' + res.status + ': ' + res.statusText));
+    }
+  } catch (err) {
+    if (window.location.protocol.startsWith('http') && window.location.hostname === 'localhost') {
+      try {
+        var pRes = await fetch('/api/experiential/decisions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key, 'X-Exp-Base': customUrl || getExpBaseUrl() },
+          body: JSON.stringify(payload)
+        });
+        if (pRes.ok) return await pRes.json();
+      } catch (pErr) {}
+    }
+    throw err;
+  }
+}
+
+// --- AI CHAT & DECISION RENDERING ---
 var aiChatHistory = [];
 
 function initAiChatWelcome(){
   var container = document.getElementById('ai-chat-messages');
   if (container.children.length === 0){
     var welcome = currentLang === 'vi' ?
-      "👋 Chào bạn! Tôi là **Trợ lý AI PMP (Kimi-K3 / River.ai)**.\n\nTôi sẵn sàng hỗ trợ bạn:\n" +
-      "1. **Đối chiếu & kiểm tra tính chính xác** của số liệu tính toán.\n" +
-      "2. **Phát hiện dữ liệu bất thường** và gợi ý hiệu chỉnh cho người nhập liệu.\n" +
-      "3. **Phân tích ý nghĩa kế toán quản trị** & thẩm định tài chính (EVM, CPM, NPV, IRR, CoQ, Six Sigma...).\n" +
-      "4. **Đưa ra giải pháp tối ưu hóa** tiến độ và chi phí cho Project Manager.\n\n" +
-      "💡 *Bấm nút **[ 🤖 Tham vấn AI ]** trên bất kỳ Tab nào để gửi toàn bộ số liệu của Tab đó sang cho tôi kiểm tra ngay lập tức!*" :
-      "👋 Hello! I am your **PMP AI Financial & Technical Advisor (Kimi-K3 / River.ai)**.\n\nI can cross-check your project calculations, flag input anomalies, interpret financial & managerial accounting metrics, and advise on optimal project control strategies.\n\n💡 *Click **[ 🤖 AI Audit ]** on any tab to automatically send its inputs and outputs for an in-depth audit!*";
+      "👋 Chào bạn! Tôi là **PMP AI Financial & Decision Hub**.\n\n" +
+      "Hệ thống hiện hỗ trợ đồng thời 2 nền tảng mạnh mẽ:\n" +
+      "1. **River.ai (moonshotai/Kimi-K3 & DeepSeek):** Cố vấn đối chiếu số học, phân tích kế toán quản trị và tối ưu chi phí tiến độ.\n" +
+      "2. **Experiential Labs (gpt-6-luna-decisions):** Chuyên gia thẩm định ra quyết định (ACCEPT / REJECT / REVIEW) cho Ban Quản Trị (CCB) và Project Sponsor.\n\n" +
+      "💡 *Bấm **[ 🤖 Tham vấn AI ]** để nhận phân tích chi tiết, hoặc bấm **[ ⚖️ Quyết định GPT-6 ]** để chạy mô hình thẩm định quyết định chính thức!*" :
+      "👋 Hello! I am your **PMP AI Financial & Decision Hub**.\n\n" +
+      "Powered by both **River.ai (Kimi-K3)** for analytical reasoning and **Experiential Labs (gpt-6-luna-decisions)** for formal project governance decisions (ACCEPT / REJECT / REVIEW).\n\n" +
+      "💡 *Click **[ 🤖 AI Audit ]** for deep analysis or **[ ⚖️ GPT-6 Decision ]** for formal governance verdict!*";
     appendAiMessage('assistant', welcome);
   }
 }
@@ -1773,15 +1970,9 @@ function appendAiMessage(role, text){
 
 function formatMarkdown(text){
   if (!text) return '';
-  var s = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  // Bold
+  var s = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Inline code
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // Lists
   s = s.replace(/^\s*[\*\-]\s+(.*)$/gm, '• $1');
   return s;
 }
@@ -1813,51 +2004,45 @@ async function sendAiMessage(){
   appendAiMessage('user', text);
   aiChatHistory.push({role: 'user', content: text});
 
-  // Check key
-  if (!getRiverApiKey()){
+  var provider = getActiveProvider();
+  if (provider === 'river' && !getRiverApiKey()){
     appendAiMessage('assistant', currentLang === 'vi' ?
-      "⚠️ Bạn chưa cấu hình **River.ai API Key**.\n\nVui lòng bấm nút **[ ⚙️ Settings ]** ở góc trên cửa sổ này, nhập API Key từ console.river.ai và bấm **Lưu cấu hình** để kích hoạt mô hình moonshotai/Kimi-K3." :
-      "⚠️ **River.ai API Key** is not configured.\n\nPlease click **[ ⚙️ Settings ]** above, paste your API Key from console.river.ai, and click Save.");
+      "⚠️ Bạn chưa cấu hình **River.ai API Key**. Vui lòng bấm **[ ⚙️ Settings ]** để nhập key." :
+      "⚠️ **River.ai API Key** is not configured. Please open Settings.");
+    return;
+  } else if (provider === 'experiential' && !getExpApiKey()){
+    appendAiMessage('assistant', currentLang === 'vi' ?
+      "⚠️ Bạn chưa cấu hình **Experiential Labs API Key**. Vui lòng bấm **[ ⚙️ Settings ]** để nhập key." :
+      "⚠️ **Experiential Labs API Key** is not configured. Please open Settings.");
     return;
   }
 
-  var loadingBubble = appendAiMessage('assistant', '⏳ ' + (currentLang === 'vi' ? 'Đang phân tích và đối chiếu với mô hình Kimi-K3...' : 'Analyzing and auditing with Kimi-K3...'));
+  var loadingBubble = appendAiMessage('assistant', '⏳ ' + (currentLang === 'vi' ? 'Đang gửi yêu cầu tới ' + (provider==='river'?getRiverModel():getExpModel()) + '...' : 'Processing with ' + (provider==='river'?getRiverModel():getExpModel()) + '...'));
 
   try {
-    var response = await fetchRiverAI(aiChatHistory);
+    var response = '';
+    if (provider === 'river'){
+      response = await fetchRiverAI(aiChatHistory);
+    } else {
+      // Chat completion on Experiential
+      var expBase = getExpBaseUrl().replace(/\/+$/, '') + '/chat/completions';
+      var res = await fetch(expBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getExpApiKey() },
+        body: JSON.stringify({ model: getExpModel() || 'gpt-6-luna', messages: aiChatHistory, temperature: 0.3 })
+      });
+      if (res.ok){
+        var data = await res.json();
+        response = data.choices[0].message.content;
+      } else {
+        throw new Error('HTTP ' + res.status);
+      }
+    }
     loadingBubble.innerHTML = formatMarkdown(response);
     aiChatHistory.push({role: 'assistant', content: response});
     scrollAiChatToBottom();
   } catch(err) {
-    loadingBubble.innerHTML = '<span style="color:#f85149">❌ <strong>Lỗi kết nối River.ai:</strong> ' + err.message + '</span>';
-  }
-}
-
-// Quick AI prompts
-function quickAiPrompt(type){
-  var activePanel = document.querySelector('.tab-panel.active');
-  var tabNum = activePanel ? parseInt(activePanel.id.replace('tab-', ''), 10) : 1;
-  
-  if (type === 'audit'){
-    askAiAboutTab(tabNum);
-  } else if (type === 'accounting'){
-    var prompt = currentLang === 'vi' ?
-      "Hãy phân tích khía cạnh kế toán tài chính và quản trị của Tab hiện tại (EVM/CPM/Chi phí/Chất lượng/NPV), chỉ rõ tác động đến dòng tiền và ngân sách." :
-      "Provide a managerial and financial accounting analysis for this PMP domain, focusing on cash flow, balance sheet impact, and cost governance.";
-    document.getElementById('ai-user-input').value = prompt;
-    sendAiMessage();
-  } else if (type === 'optimize'){
-    var prompt = currentLang === 'vi' ?
-      "Đưa ra các giải pháp hành động cụ thể để tối ưu hóa tiến độ, cắt giảm chi phí và nâng cao hiệu suất theo chuẩn PMP cho dữ liệu hiện tại." :
-      "Provide actionable optimization recommendations to compress schedule, optimize costs, and enhance performance for the current dataset.";
-    document.getElementById('ai-user-input').value = prompt;
-    sendAiMessage();
-  } else if (type === 'exam'){
-    var prompt = currentLang === 'vi' ?
-      "Hãy cho tôi 2 câu hỏi tình huống thường gặp trong kỳ thi PMP liên quan trực tiếp đến các công thức và chỉ số ở Tab này, kèm đáp án và giải thích chi tiết." :
-      "Give me 2 typical PMP exam scenario questions related to this knowledge area and formulas, with answers and explanations.";
-    document.getElementById('ai-user-input').value = prompt;
-    sendAiMessage();
+    loadingBubble.innerHTML = '<span style="color:#f85149">❌ <strong>Lỗi kết nối AI:</strong> ' + err.message + '</span>';
   }
 }
 
@@ -1865,7 +2050,6 @@ function quickAiPrompt(type){
 function askAiAboutTab(tabNum){
   var panel = document.getElementById('tab-' + tabNum);
   if (!panel) return;
-  
   var title = panel.querySelector('h2') ? panel.querySelector('h2').innerText : ('Tab ' + tabNum);
   var inputs = [];
   panel.querySelectorAll('input').forEach(function(i){
@@ -1873,37 +2057,108 @@ function askAiAboutTab(tabNum){
     var val = i.value !== '' ? i.value : '(chưa nhập)';
     inputs.push(label + ': ' + val);
   });
-
   var outEl = document.getElementById('tab-' + tabNum + '-output');
   var outputText = outEl ? outEl.innerText.trim() : '';
 
-  var prompt = '';
-  if (currentLang === 'vi') {
-    prompt = "📌 **YÊU CẦU ĐỐI CHIẾU & PHÂN TÍCH SỐ LIỆU TẠI " + title.toUpperCase() + "**\n\n" +
-      "**1. Dữ liệu đầu vào của người dùng:**\n" + inputs.map(function(s){ return "- " + s; }).join('\n') + "\n\n" +
-      "**2. Kết quả tính toán của hệ thống:**\n" + (outputText ? outputText : "(Chưa bấm tính toán)") + "\n\n" +
-      "**Yêu cầu chuyên gia:**\n" +
-      "- Kiểm tra tính chuẩn xác của các phép tính số học theo công thức PMP.\n" +
-      "- Chỉ ra các số liệu bất thường hoặc sai sót logic người dùng cần lưu ý (ví dụ: suất chiết khấu quá cao, thiếu dòng thu, thời lượng âm...).\n" +
-      "- Phân tích ý nghĩa kế toán tài chính và quản trị của các chỉ số này.\n" +
-      "- Đưa ra đề xuất cải tiến và tối ưu hóa cụ thể cho Project Manager.";
-  } else {
-    prompt = "📌 **PMP CALCULATION AUDIT & FINANCIAL CONSULTATION: " + title.toUpperCase() + "**\n\n" +
-      "**1. User Inputs:**\n" + inputs.map(function(s){ return "- " + s; }).join('\n') + "\n\n" +
-      "**2. System Calculated Outputs:**\n" + (outputText ? outputText : "(Not computed yet)") + "\n\n" +
-      "**Expert Instructions:**\n" +
-      "- Verify arithmetic correctness against PMP standards.\n" +
-      "- Flag any data anomalies or illogical inputs (e.g. extreme rates, negative durations, missing inflows).\n" +
-      "- Provide managerial & financial accounting interpretations.\n" +
-      "- Give concrete optimization actions for the Project Manager.";
-  }
+  var prompt = "📌 **ĐỐI CHIẾU SỐ LIỆU TẠI " + title.toUpperCase() + "**\n\n" +
+    "**1. Dữ liệu nhập:**\n" + inputs.map(function(s){ return "- " + s; }).join('\n') + "\n\n" +
+    "**2. Kết quả tính toán:**\n" + (outputText ? outputText : "(Chưa tính)") + "\n\n" +
+    "**Yêu cầu chuyên gia:** Kiểm tra tính đúng đắn số học, cảnh báo dữ liệu bất thường, giải thích ý nghĩa kế toán tài chính quản trị và gợi ý giải pháp tối ưu.";
 
   openModal('modal-ai-chat');
   document.getElementById('ai-user-input').value = prompt;
   sendAiMessage();
 }
 
-// On Page Load
+// 1-Click GPT-6 Luna Decision Gate
+function askDecisionAboutTab(tabNum){
+  var panel = document.getElementById('tab-' + tabNum);
+  if (!panel) return;
+  var title = panel.querySelector('h2') ? panel.querySelector('h2').innerText : ('Tab ' + tabNum);
+  var inputs = [];
+  panel.querySelectorAll('input').forEach(function(i){
+    var label = i.parentElement ? i.parentElement.innerText.replace(i.value, '').trim() : i.id;
+    inputs.push(label + ': ' + (i.value !== '' ? i.value : 'N/A'));
+  });
+  var outEl = document.getElementById('tab-' + tabNum + '-output');
+  var outputText = outEl ? outEl.innerText.trim() : 'No output calculated yet.';
+
+  var summary = "Domain: " + title + ". Inputs: " + inputs.join('; ') + ". Calculated Metrics: " + outputText.replace(/\n+/g, ' | ');
+  runDecisionGate(title, summary);
+}
+
+function triggerCurrentTabDecision(){
+  var activePanel = document.querySelector('.tab-panel.active');
+  var tabNum = activePanel ? parseInt(activePanel.id.replace('tab-', ''), 10) : 1;
+  askDecisionAboutTab(tabNum);
+}
+
+async function runDecisionGate(domainName, summaryText){
+  openModal('modal-ai-chat');
+  appendAiMessage('user', '⚖️ **YÊU CẦU THẨM ĐỊNH QUYẾT ĐỊNH DỰ ÁN (GPT-6 LUNA DECISIONS):** ' + domainName);
+
+  if (!getExpApiKey()){
+    appendAiMessage('assistant', currentLang === 'vi' ?
+      "⚠️ Bạn chưa cấu hình **Experiential Labs API Key** để chạy mô hình `gpt-6-luna-decisions`.\n\nVui lòng bấm **[ ⚙️ Settings ]** -> chọn tab **Experiential Labs**, dán API Key từ platform.experientiallabs.ai và bấm **Lưu**." :
+      "⚠️ **Experiential Labs API Key** is required to run `gpt-6-luna-decisions`.\n\nPlease open Settings -> Experiential Labs tab, paste your API Key and Save.");
+    return;
+  }
+
+  var bubble = appendAiMessage('assistant', '⏳ Đang gửi dữ liệu thẩm định tới mô hình **gpt-6-luna-decisions** (Experiential Labs)...');
+
+  try {
+    var res = await fetchExperientialDecision(summaryText, "Review this project data under PMI governance standards. Decide whether to accept, reject, or require further review.");
+    var answer = res.answers && res.answers.length > 0 ? (res.answers.find(a => a.name === 'review') || res.answers[0]) : null;
+
+    if (!answer){
+      bubble.innerHTML = '⚠️ Không nhận được câu trả lời quyết định từ mô hình.';
+      return;
+    }
+
+    var val = (answer.answer || answer.value || '').toLowerCase();
+    var badgeClass = val === 'accept' ? 'decision-badge-accept' : (val === 'reject' ? 'decision-badge-reject' : 'decision-badge-review');
+    var badgeLabel = val === 'accept' ? '✅ ACCEPT (PHÊ DUYỆT)' : (val === 'reject' ? '❌ REJECT (TỪ CHỐI)' : '⚠️ REVIEW (CẦN GIẢI TRÌNH THÊM)');
+
+    var html = '<div class="decision-card">' +
+      '<div class="decision-header">' +
+        '<span class="' + badgeClass + '">' + badgeLabel + '</span>' +
+        '<span style="color:#8b949e;font-size:11px">Model: gpt-6-luna-decisions</span>' +
+      '</div>' +
+      '<p style="margin-top:6px;line-height:1.6"><strong>Giải trình quyết định (Rationale):</strong> ' + (answer.rationale || answer.description || answer.answer || 'Đã phân tích dựa trên tiêu chuẩn quản trị rủi ro và tài chính dự án.') + '</p>' +
+      (answer.confidence ? '<p style="margin-top:4px;font-size:11px;color:#8b949e">Độ tin cậy mô hình: <strong>' + (answer.confidence * 100).toFixed(1) + '%</strong></p>' : '') +
+      (res.usage ? '<p style="margin-top:2px;font-size:10px;color:#8b949e">Tokens: ' + JSON.stringify(res.usage) + '</p>' : '') +
+    '</div>';
+
+    bubble.innerHTML = html;
+    scrollAiChatToBottom();
+  } catch(err) {
+    bubble.innerHTML = '<span style="color:#f85149">❌ <strong>Lỗi thẩm định quyết định:</strong> ' + err.message + '</span>';
+  }
+}
+
+function quickAiPrompt(type){
+  var activePanel = document.querySelector('.tab-panel.active');
+  var tabNum = activePanel ? parseInt(activePanel.id.replace('tab-', ''), 10) : 1;
+  if (type === 'audit'){
+    askAiAboutTab(tabNum);
+  } else if (type === 'accounting'){
+    document.getElementById('ai-user-input').value = currentLang === 'vi' ?
+      "Hãy phân tích khía cạnh kế toán tài chính và quản trị của Tab hiện tại, chỉ rõ tác động đến dòng tiền và ngân sách." :
+      "Provide a managerial and financial accounting analysis for this PMP domain.";
+    sendAiMessage();
+  } else if (type === 'optimize'){
+    document.getElementById('ai-user-input').value = currentLang === 'vi' ?
+      "Đưa ra các giải pháp hành động cụ thể để tối ưu hóa tiến độ, cắt giảm chi phí và nâng cao hiệu suất cho dữ liệu hiện tại." :
+      "Provide actionable optimization recommendations to compress schedule and optimize costs.";
+    sendAiMessage();
+  } else if (type === 'exam'){
+    document.getElementById('ai-user-input').value = currentLang === 'vi' ?
+      "Hãy cho tôi 2 câu hỏi tình huống kỳ thi PMP liên quan trực tiếp đến các công thức và chỉ số ở Tab này, kèm đáp án và giải thích." :
+      "Give me 2 typical PMP exam scenario questions related to this knowledge area with explanations.";
+    sendAiMessage();
+  }
+}
+
 window.addEventListener('DOMContentLoaded', function(){
   updateAiStatusIndicator();
 });
